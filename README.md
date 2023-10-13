@@ -1,0 +1,2 @@
+# Diplomova-Prace
+Diplomová práce
