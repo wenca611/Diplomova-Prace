@@ -1,2 +1,4 @@
-# Diplomova-Prace
-Diplomová práce
+# Semestrální práce
+Semestrální práce
+
+2023/24
