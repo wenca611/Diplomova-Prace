@@ -2,7 +2,7 @@
 RoboCode AI trainer
 
 Name: robocode_ai_trainer.py
-Description: TODO
+Description: Optimization of control using reinforcement learning on the Robocode platform
 Autor: Bc. Václav Pastušek
 Creation date: 15. 10. 2023
 Last update: 15. 10. 2023
@@ -10,6 +10,7 @@ School: BUT FEEC
 VUT number: 204437
 Python version: 3.11.6
 """
+
 # Standard libraries:
 try:
     #import platform  # Access to underlying platform’s identifying data
