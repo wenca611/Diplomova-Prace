@@ -1,0 +1,24 @@
+<component name="libraryTable">
+  <library name="lib_backup">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.core-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.ui.editor-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.battle-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/codesize-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/junit-4.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/commons-io-1.3.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/picocontainer-2.14.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/commons-beanutils-1.9.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.repository-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/bcel-6.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.ui-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.host-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.sound-1.9.3.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/robocode.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/roborumble.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_backup/commons-collections-3.2.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

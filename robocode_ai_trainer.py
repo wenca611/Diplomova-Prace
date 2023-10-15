@@ -1,8 +1,65 @@
+"""
+RoboCode AI trainer
+
+Name: robocode_ai_trainer.py
+Description: TODO
+Autor: Bc. Václav Pastušek
+Creation date: 15. 10. 2023
+Last update: 15. 10. 2023
+School: BUT FEEC
+VUT number: 204437
+Python version: 3.11.6
+"""
+# Standard libraries:
+try:
+    #import platform  # Access to underlying platform’s identifying data
+    import os  # Miscellaneous operating system interfaces
+    #from typing import Union, Callable, Optional, Generator  # Support for type hints
+    #import functools  # Higher-order functions and operations on callable objects
+    #import itertools  # Functions creating iterators for efficient looping
+    #import signal  # Set handlers for asynchronous events
+    #import re  # Regular expression operations
+    #import time as tim  # Time access and conversions
+    #import concurrent.futures  # Launching parallel tasks
+except ImportError as L_err:
+    print("Chyba v načtení standardní knihovny: {0}".format(L_err))
+    exit(1)
+except Exception as e:
+    print(f"Jiná chyba v načtení standardní knihovny: {e}")
+    exit(1)
+
+# Third-party libraries:
+try:
+    import tensorflow as tf
+
+    # Libraries for web scraping
+    #import requests  # HTTP library for sending requests
+    #from bs4 import BeautifulSoup  # Library for parsing HTML and XML documents
+
+    # Data manipulation and analysis
+    #import xarray as xr  # Library for working with labeled multi-dimensional arrays
+    #import numpy as np  # Fundamental package for scientific computing
+    #from scipy.stats import skew, kurtosis, hmean, gmean, linregress  # Library for statistics and regression analysis
+    #from scipy.fftpack import dct  # Library for discrete cosine transform
+
+    # Visualization
+    #import tqdm  # displaying progress bars
+    #import matplotlib.pyplot as plt  # Library for creating static, animated, and interactive visualizations
+    #import matplotlib as mpl  # Library for customization of matplotlib plots
+    #import matplotlib.colors as mcolors  # Library for color mapping and normalization
+
+    # User interaction
+    #import keyboard  # Library for detecting keyboard input
+except ImportError as L_err:
+    print("Chyba v načtení knihovny třetích stran: {0}".format(L_err))
+    exit(1)
+except Exception as e:
+    print(f"Jiná chyba v ačtení knihovny třetích stran: {e}")
+    exit(1)
+
 import re
 import subprocess
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # TODO
 
 # Globals for game.properties
 game_width: int = 800  # game width: 800
@@ -96,7 +153,7 @@ with open(path_to_java_server, "w") as server_file:
 
 print("Nastavení serveru bylo úspěšné.")"""
 
-# robocode.properties
+# Globals for robocode.properties
 """robocode.options.view.ground=false
 robocode.options.rendering.method=0
 robocode.options.rendering.antialiasing=2
@@ -440,3 +497,10 @@ with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_f
 # time.sleep(5)
 
 # print("Java programy byly zkompilovány, spuštěny a výstupy uloženy do souborů.")
+
+
+
+
+if __name__ == '__main__':
+
+    pass
