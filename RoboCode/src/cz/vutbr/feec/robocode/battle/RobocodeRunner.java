@@ -85,7 +85,6 @@ public class RobocodeRunner {
 		// remove all whitespaces
 		listOfEnemies = listOfEnemies.replaceAll("\\s", "");
 		// create list of tanks to fight
-
 		String tanks[] = listOfEnemies.split(",");
 		String finalListOfTanks = "";
 		for (String tankName : tanks) {

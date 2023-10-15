@@ -1,7 +1,7 @@
 """
 RoboCode AI trainer
 
-Name: robocode_ai_trainer.py
+Name: robocode_rl_trainer.py
 Description: Optimization of control using reinforcement learning on the Robocode platform
 Autor: Bc. Václav Pastušek
 Creation date: 15. 10. 2023
