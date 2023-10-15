@@ -97,7 +97,17 @@ opponents_with_names: list[str] = [enemies[int(opponent)] if opponent.isdigit() 
 # Vytvořit nový řetězec pro seznam protivníků
 opponent_list: str = ", ".join(opponents_with_names)
 
-layer_sizes = [1024, 4]  # [1024, 2**11, 2**11, 4]
+# Globals for robocode.properties
+
+
+
+
+
+
+
+
+
+layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
 """def create_model():
     global layer_sizes
@@ -153,7 +163,9 @@ with open(path_to_java_server, "w") as server_file:
 
 print("Nastavení serveru bylo úspěšné.")"""
 
-# Globals for robocode.properties
+
+
+# TODO, předat proměnnou s výběrem do funkce a zjistit si název, upravit ho a vykonat úpravu v suboru!!!
 """robocode.options.view.ground=false
 robocode.options.rendering.method=0
 robocode.options.rendering.antialiasing=2
@@ -500,7 +512,14 @@ with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_f
 
 
 
-
 if __name__ == '__main__':
-
     pass
+    # uvítání
+    # vykonani game.properties
+    # vykonání robocode.properties
+    # TODO, pokud příkaz chybí, tak jej doplnit na začátek nebo (na konec)?
+    # nastavení epizod, možnost interakce or not
+    # zapnuti robocode a počkání na konec
+    # načtení dat, načtení neuronky a zpěně gradient a uložení neuronky
+    # konec epizod
+    # uložení dat pro grafy
