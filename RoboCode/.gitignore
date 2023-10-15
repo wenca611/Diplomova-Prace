@@ -1,0 +1,27 @@
+/bin/
+/RoboCode/robots/
+RoboCode/config/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Netbeans
+nb-configuration.xml
+/acceptance-tests-cleanup/nbproject
+nbactions.xml
+
+# Mac
+.DS_Store
+
+# Maven
+target/
+
+
+

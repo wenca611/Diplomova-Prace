@@ -175,7 +175,7 @@ public class PyRobotClient extends AdvancedRobot {
 		int simulatedGunTurn = (int) qTable[state][3];
 
 		// Uložení stavů a akcí do souboru
-		try (FileWriter writer = new FileWriter("data.txt", true)) {
+		/*try (FileWriter writer = new FileWriter("data.txt", true)) {
 			writer.write(myTank+"+"); // muj tank
 			writer.write(processedBattleData.getListOfProcessedTanks()+"+"); // ostatni tanky
 			writer.write(processedBattleData.getListOfProcessedBullets()+"+"); // strely
@@ -183,7 +183,7 @@ public class PyRobotClient extends AdvancedRobot {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 
 		// Nastavení akcí na základě simulovaných dat
 		moveAmount = simulatedTankMove;
