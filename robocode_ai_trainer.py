@@ -1,11 +1,10 @@
 import re
 import subprocess
 import os
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 
-# Globals
+# Globals for game.properties
 game_width: int = 800  # game width: 800
 game_height: int = 600  # game height: 600
 numberOfRounds: int = 10  # number of rounds: 10
@@ -32,7 +31,7 @@ enemies: dict = {
     17: "PyRobotClient"
 }
 
-opponent_list: str = "Crazy, 13, 17"
+opponent_list: str = "Crazy, 13, 17"  # "Crazy, 13, 17"
 
 # Rozdělit seznam protivníků podle čárky a odstranit případné mezery
 opponents: list[str] = [opponent.strip() for opponent in opponent_list.split(",")]
@@ -43,8 +42,7 @@ opponent_list: str = ", ".join(opponents_with_names)
 
 layer_sizes = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
-
-def create_model():
+"""def create_model():
     global layer_sizes
     if len(layer_sizes) < 3:
         del layer_sizes
@@ -96,7 +94,7 @@ new_content = re.sub(
 with open(path_to_java_server, "w") as server_file:
     server_file.write(new_content)
 
-print("Nastavení serveru bylo úspěšné.")
+print("Nastavení serveru bylo úspěšné.")"""
 
 # robocode.properties
 """robocode.options.view.ground=false
@@ -129,7 +127,7 @@ robocode.options.view.sentryBorder=false
 robocode.options.sound.enableGunshot=false
 robocode.options.common.appendWhenSavingResults=false
 robocode.options.view.scanArcs=false"""
-robocode_options_view_FPS: bool = True
+"""robocode_options_view_FPS: bool = True
 robocode_options_view_TPS: bool = True
 robocode_options_battle_desiredTPS: int = 30
 
@@ -169,13 +167,13 @@ del content, new_content
 
 # Open for read
 with open(path_to_client, "r") as client_file:
-    content = client_file.read()
+    content = client_file.read()"""
 
 # Najděte všechny výskyty řetězce, které chcete nahradit
 """matches = re.findall(r'\{0\.', content)
 print(matches)"""
 
-new_content = re.sub(
+"""new_content = re.sub(
     r'\{\d\., \d\., \d\., \d\.},',
     '{1., 1., 1., 1.},',
     content
@@ -185,10 +183,10 @@ new_content = re.sub(
 with open(path_to_client, "w") as client_file:
     client_file.write(new_content)
 
-print("Nastavení konfigu bylo úspěšné.")
+print("Nastavení konfigu bylo úspěšné.")"""
 
 # Adresář, kde se nachází váš Java program
-java_program_directory = "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode"
+"""java_program_directory = "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode"
 
 # Nastavíme pracovní adresář na adresář s Java programem
 os.chdir(java_program_directory)
@@ -229,7 +227,7 @@ try:
     output = subprocess.check_output(java_command, stderr=subprocess.STDOUT)
     print("STDOUT:", output.decode("utf-8"))
 except subprocess.CalledProcessError as e:
-    print("Chyba při spuštění příkazu:", e.output.decode("utf-8"))
+    print("Chyba při spuštění příkazu:", e.output.decode("utf-8"))"""
 
 """# Funkce pro spuštění klienta
 def start_client():
