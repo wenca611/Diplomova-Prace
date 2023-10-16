@@ -72,7 +72,7 @@ nainstalovanou
 některou z používaných knihoven. Může se stát, že vaše IDE má vlastní základní verzi Pythonu, se kterou a váš skript při
 spuštění v IDE funguje, ale pokus je spuštěn na počítači mimo něj, například z příkazové řádky tak nemá nainstalovaný
 Python, který by skript spustil. Proto radši zkontrolujte v cmd zda máte v počítači nainstalovaný python ve verzi
-3 `python3 –version` případně všechny knihovny které váš model využívá například `pip show numpy`.
+3 `python –version` případně všechny knihovny které váš model využívá například `pip show numpy`.
 
 ![](manualImages/numpyCheck.png)
 
