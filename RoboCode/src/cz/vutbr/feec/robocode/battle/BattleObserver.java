@@ -38,7 +38,7 @@ public class BattleObserver extends BattleAdaptor {
 	}
 
 	public void onBattleMessage(BattleMessageEvent e) {
-		System.out.println("Msg> " + e.getMessage()); //TODO odstraneno
+		System.out.println("Msg> " + e.getMessage()); //TODO deleted for now
 	}
 
 	public void onBattleError(BattleErrorEvent e) {

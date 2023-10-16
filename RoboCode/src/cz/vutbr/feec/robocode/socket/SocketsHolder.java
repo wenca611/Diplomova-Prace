@@ -16,7 +16,7 @@ public class SocketsHolder {
 		return mapOfTCPClientSockets.get(port);
 	}**/
 
-	// Použijeme ConcurrentHashMap místo HashMap pro více vláken
+	// We will use ConcurrentHashMap instead of HashMap for multi-threading
 	private static ConcurrentHashMap<Integer, TCPClientSocket> mapOfTCPClientSockets = new ConcurrentHashMap<>();
 
 	public void addTCPClientToMap(int port, TCPClientSocket tcpClientSocket) {

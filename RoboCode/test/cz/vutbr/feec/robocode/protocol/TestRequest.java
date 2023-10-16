@@ -12,14 +12,14 @@ public class TestRequest extends TestCase {
 
 		byte[] screen = new byte[] { 1 };
 
-		// Prevod do pole bytu
+		// Convert to byte array
 		RobocodeRequest p1 = new RobocodeRequest(800, 800, 3, 3, screen);
 		byte[] data = p1.toByteArray();
 
-		// Parsovani zpet
+		// Parsing back
 		RobocodeRequest p2 = RobocodeRequest.parse(data);
 
-		// Jsou si rovny ?
+		// Are they equal?
 		assertEquals(p1.getTankX(), p2.getTankX());
 		assertEquals(p1.getScreenHeight(), p2.getScreenHeight());
 		assertEquals(p1.getScreenWidth(), p2.getScreenWidth());
