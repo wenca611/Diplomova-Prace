@@ -106,8 +106,6 @@ opponent_list: str = ", ".join(opponents_with_names)
 
 
 
-
-
 layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
 """def create_model():
