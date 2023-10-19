@@ -149,7 +149,7 @@ class GameSettingsModifier:
     # Vytvořit nový řetězec pro seznam protivníků
     opponent_list: str = ", ".join(opponents_with_names)
 
-    
+
 
 
 
