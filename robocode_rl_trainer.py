@@ -21,7 +21,7 @@ try:
     #import functools  # Higher-order functions and operations on callable objects
     #import itertools  # Functions creating iterators for efficient looping
     import signal  # Set handlers for asynchronous events
-    #import re  # Regular expression operations
+    import re  # Regular expression operations
     #import time as tim  # Time access and conversions
     #import concurrent.futures  # Launching parallel tasks
 except ImportError as L_err:
@@ -75,6 +75,9 @@ def load_tensorflow() -> types.ModuleType:
         exit(1)
 
 
+# DEBUG option
+DEBUG_PRINT = True
+
 layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
 
@@ -112,10 +115,11 @@ class Utils:
 
 
 class GameSettingsModifier:
-    # Globals for game.properties
-    game_width: int = 800  # game width: 800
-    game_height: int = 600  # game height: 600
-    numberOfRounds: int = 10  # number of rounds: 10
+    # parameters for game.properties
+    path_to_game_properties: str = "RoboCode/config/game.properties"
+    gameWidth: int = 800  # game width: 800
+    gameHeight: int = 600  # game height: 600
+    numberOfRounds: int = 100  # number of rounds: 10
     isVisible: bool = True  # Game is visible: True
 
     enemies: dict = {
@@ -139,17 +143,73 @@ class GameSettingsModifier:
         17: "PyRobotClient"
     }
 
-    opponent_list: str = "Crazy, 13, 17"  # "Crazy, 13, 17"
+    listOfEnemies: str = "Crazy, 13, 17"  # opponents list: Crazy, 13, 17
 
-    # Rozdělit seznam protivníků podle čárky a odstranit případné mezery
-    opponents: list[str] = [opponent.strip() for opponent in opponent_list.split(",")]
-    # Převést čísla na jména protivníků
-    opponents_with_names: list[str] = [enemies[int(opponent)] if opponent.isdigit() else opponent for opponent in
-                                       opponents]
-    # Vytvořit nový řetězec pro seznam protivníků
-    opponent_list: str = ", ".join(opponents_with_names)
+    # parameters for robocode.properties
+    path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
+    # TODO
 
+    def __init__(self) -> None:
+        # Rozdělit seznam protivníků podle čárky a odstranit případné mezery
+        opponents: list[str] = [opponent.strip() for opponent in self.listOfEnemies.split(",")]
 
+        # Převést čísla na jména protivníků
+        opponents_with_names: list[str] = [self.enemies[int(opponent)] if opponent.isdigit() else opponent for opponent
+                                           in opponents]
+        # update seznamu protivníků
+        self.listOfEnemies: str = ", ".join(opponents_with_names)
+
+        print("Seznam protivníků:", self.listOfEnemies) if DEBUG_PRINT else None
+
+    @staticmethod
+    def read_file(filename):
+        try:
+            with open(filename, 'r') as file:
+                content = file.read()
+            return content
+        except FileNotFoundError:
+            print(f"Soubor {filename} nebyl nalezen.")
+            exit(1)
+        except Exception as e:
+            print(f"Chyba při čtení souboru: {e}")
+            exit(1)
+
+    @staticmethod
+    def write_file(filename, content):
+        try:
+            with open(filename, 'w') as file:
+                file.write(content)
+            print(f"Soubor {filename} byl úspěšně uložen.")
+        except Exception as e:
+            print(f"Chyba při zápisu souboru: {e}")
+            exit(1)
+
+    def set_properties(self, filename):
+        pass
+
+    def set_game_properties(self):
+        content = self.read_file(self.path_to_game_properties)
+        print("Game properties[:300]:", content[:300]) if DEBUG_PRINT else None
+
+        content = re.sub(r'numberOfRounds\s*=\s*\d+', f"numberOfRounds = {self.numberOfRounds}", content)
+        content = re.sub(r'gameWidth\s*=\s*\d+', f"gameWidth = {self.gameWidth}", content)
+        content = re.sub(r'gameHeight\s*=\s*\d+', f"gameHeight = {self.gameHeight}", content)
+        content = re.sub(r'numberOfRounds\s*=\s*\d+', f"numberOfRounds = {self.numberOfRounds}", content)
+        content = re.sub(r'isVisible\s*=\s*\w+', f"isVisible = {str(self.isVisible).lower()}", content)
+
+        print("Game new properties[:300]:", content[:300]) if DEBUG_PRINT else None
+
+        """
+
+        new_content = re.sub(
+            r'String seznamProtivniku\s*=\s*".*?";',
+            f'String seznamProtivniku = "{self.opponent_list}";',
+            new_content
+        )"""
+        pass
+
+    def set_robocode_properties(self):
+        pass
 
 
 
@@ -175,27 +235,6 @@ class GameSettingsModifier:
 
 create_model()
 
-new_content = re.sub(r'BattlefieldSpecification\(\s*\d+\s*,\s*\d+\s*\)',
-                     f'BattlefieldSpecification({game_width}, {game_height})',
-                     content)
-
-new_content = re.sub(
-    r'numberOfRounds\s*=\s*\d+',
-    f'numberOfRounds = {numberOfRounds}',
-    new_content
-)
-
-new_content = re.sub(
-    r'engine\.setVisible\(\s*\w+\s*\)',
-    f'engine.setVisible({str(isVisible).lower()})',  # Převod na malá písmena
-    new_content
-)
-
-new_content = re.sub(
-    r'String seznamProtivniku\s*=\s*".*?";',
-    f'String seznamProtivniku = "{opponent_list}";',
-    new_content
-)
 """
 
 # TODO, předat proměnnou s výběrem do funkce a zjistit si název, upravit ho a vykonat úpravu v suboru!!!
@@ -476,9 +515,6 @@ exit(0)
 
 
 
-
-
-
 import os
 import subprocess
 import time
@@ -557,10 +593,13 @@ if __name__ == '__main__':
     Utils.welcome()
 
     # nastavení konfigurace hry a platformy
-    GameSettingsModifier
+    game_settings = GameSettingsModifier()
+    game_settings.set_game_properties()
+    game_settings.set_robocode_properties()
 
     # Vyčkání na dokončení vlákna
     tensorflow_thread.join()
+    print("Načten Tensorflow") if DEBUG_PRINT else None
 
     # uvítání
     # vykonani game.properties
