@@ -13,12 +13,14 @@ Python version: 3.11.6
 
 # Standard libraries:
 try:
-    #import platform  # Access to underlying platform’s identifying data
+    import platform  # Access to underlying platform’s identifying data
     import os  # Miscellaneous operating system interfaces
-    #from typing import Union, Callable, Optional, Generator  # Support for type hints
+    from typing import Optional  # Support for type hints
+    import types
+    import threading
     #import functools  # Higher-order functions and operations on callable objects
     #import itertools  # Functions creating iterators for efficient looping
-    #import signal  # Set handlers for asynchronous events
+    import signal  # Set handlers for asynchronous events
     #import re  # Regular expression operations
     #import time as tim  # Time access and conversions
     #import concurrent.futures  # Launching parallel tasks
@@ -31,7 +33,8 @@ except Exception as e:
 
 # Third-party libraries:
 try:
-    import tensorflow as tf
+    pass
+    #import tensorflow as tf
 
     # Libraries for web scraping
     #import requests  # HTTP library for sending requests
@@ -55,58 +58,102 @@ except ImportError as L_err:
     print("Chyba v načtení knihovny třetích stran: {0}".format(L_err))
     exit(1)
 except Exception as e:
-    print(f"Jiná chyba v ačtení knihovny třetích stran: {e}")
+    print(f"Jiná chyba v načtení knihovny třetích stran: {e}")
     exit(1)
 
-import re
-import subprocess
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # TODO
 
-# Globals for game.properties
-game_width: int = 800  # game width: 800
-game_height: int = 600  # game height: 600
-numberOfRounds: int = 10  # number of rounds: 10
-isVisible: bool = True  # Game is visible: True
-
-enemies: dict = {
-    0: "",
-    1: "Corners",
-    2: "Crazy",
-    3: "Fire",
-    4: "Interactive",
-    5: "Interactive_v2",
-    6: "MyFirstJuniorRobot",
-    7: "MyFirstRobot",
-    8: "PaintingRobot",
-    9: "RamFire",
-    10: "SittingDuck",
-    11: "SpinBot",
-    12: "Target",
-    13: "Tracker",
-    14: "TrackFire",
-    15: "VelociRobot",
-    16: "Walls",
-    17: "PyRobotClient"
-}
-
-opponent_list: str = "Crazy, 13, 17"  # "Crazy, 13, 17"
-
-# Rozdělit seznam protivníků podle čárky a odstranit případné mezery
-opponents: list[str] = [opponent.strip() for opponent in opponent_list.split(",")]
-# Převést čísla na jména protivníků
-opponents_with_names: list[str] = [enemies[int(opponent)] if opponent.isdigit() else opponent for opponent in opponents]
-# Vytvořit nový řetězec pro seznam protivníků
-opponent_list: str = ", ".join(opponents_with_names)
-
-# Globals for robocode.properties
-
-
-
-
-
+def load_tensorflow() -> types.ModuleType:
+    try:
+        import tensorflow as tf
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        return tf
+    except ImportError as L_err:
+        print("Chyba v načtení knihovny třetích stran: {0}".format(L_err))
+        exit(1)
+    except Exception as e:
+        print(f"Jiná chyba v načtení knihovny třetích stran: {e}")
+        exit(1)
 
 
 layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
+
+
+class Utils:
+    """
+    A utility class providing various helper functions.
+    """
+
+    @staticmethod
+    def welcome() -> None:
+        """
+        Prints Welcome text
+
+        :return: None
+        """
+        print("""============Optimalizace řízení s pomocí zpětnovazebního učení na platformě Robocode================
+-autor: Bc. Václav Pastušek
+-škola: VUT FEKT
+-minimální požadovaná verze Pythonu: 3.9
+-aktuální verze Pythonu: {}
+-VUT číslo: 204437\n""".format(platform.python_version()))
+
+    @staticmethod
+    def handle_keyboard_interrupt(frame: Optional[object] = None, signal: Optional[object] = None) -> None:
+        """
+        A function for handling keyboard interrupt signal.
+
+        :param frame: Not used.
+        :param signal: Not used.
+        :return: None
+        """
+        _, _ = frame, signal  # to reduce warnings
+        print("\nUkončeno stiskem klávesy Ctrl+C nebo tlačítkem Stop")
+        exit()
+
+
+class GameSettingsModifier:
+    # Globals for game.properties
+    game_width: int = 800  # game width: 800
+    game_height: int = 600  # game height: 600
+    numberOfRounds: int = 10  # number of rounds: 10
+    isVisible: bool = True  # Game is visible: True
+
+    enemies: dict = {
+        0: "",
+        1: "Corners",
+        2: "Crazy",
+        3: "Fire",
+        4: "Interactive",
+        5: "Interactive_v2",
+        6: "MyFirstJuniorRobot",
+        7: "MyFirstRobot",
+        8: "PaintingRobot",
+        9: "RamFire",
+        10: "SittingDuck",
+        11: "SpinBot",
+        12: "Target",
+        13: "Tracker",
+        14: "TrackFire",
+        15: "VelociRobot",
+        16: "Walls",
+        17: "PyRobotClient"
+    }
+
+    opponent_list: str = "Crazy, 13, 17"  # "Crazy, 13, 17"
+
+    # Rozdělit seznam protivníků podle čárky a odstranit případné mezery
+    opponents: list[str] = [opponent.strip() for opponent in opponent_list.split(",")]
+    # Převést čísla na jména protivníků
+    opponents_with_names: list[str] = [enemies[int(opponent)] if opponent.isdigit() else opponent for opponent in
+                                       opponents]
+    # Vytvořit nový řetězec pro seznam protivníků
+    opponent_list: str = ", ".join(opponents_with_names)
+
+    
+
+
+
+
 
 """def create_model():
     global layer_sizes
@@ -127,12 +174,6 @@ layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
 
 create_model()
-
-path_to_java_server: str = "RoboCode/src/cz/vutbr/feec/robocode/battle/RobocodeRunner.java"
-
-# Open for read
-with open(path_to_java_server, "r") as server_file:
-    content = server_file.read()
 
 new_content = re.sub(r'BattlefieldSpecification\(\s*\d+\s*,\s*\d+\s*\)',
                      f'BattlefieldSpecification({game_width}, {game_height})',
@@ -155,14 +196,7 @@ new_content = re.sub(
     f'String seznamProtivniku = "{opponent_list}";',
     new_content
 )
-
-# Zapsat upravený obsah zpět do souboru
-with open(path_to_java_server, "w") as server_file:
-    server_file.write(new_content)
-
-print("Nastavení serveru bylo úspěšné.")"""
-
-
+"""
 
 # TODO, předat proměnnou s výběrem do funkce a zjistit si název, upravit ho a vykonat úpravu v suboru!!!
 """robocode.options.view.ground=false
@@ -512,11 +546,27 @@ with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_f
 
 
 if __name__ == '__main__':
-    pass
+    # Vytvořte vlákno pro načítání TensorFlow.
+    tensorflow_thread = threading.Thread(target=load_tensorflow)
+    tensorflow_thread.start()
+
+    # Sets up a keyboard interrupt signal handler.
+    signal.signal(signal.SIGINT, Utils.handle_keyboard_interrupt)
+
+    # Prints out a welcome message.
+    Utils.welcome()
+
+    # nastavení konfigurace hry a platformy
+    GameSettingsModifier
+
+    # Vyčkání na dokončení vlákna
+    tensorflow_thread.join()
+
     # uvítání
     # vykonani game.properties
     # vykonání robocode.properties
-    # TODO, pokud příkaz chybí, tak jej doplnit na začátek nebo (na konec)?
+    # čekání na tensorflow
+    # TODO, pokud příkaz chybí, tak jej doplnit na začátek nebo (na konec)???
     # nastavení epizod, možnost interakce or not
     # zapnuti robocode a počkání na konec
     # načtení dat, načtení neuronky a zpěně gradient a uložení neuronky
