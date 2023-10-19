@@ -114,7 +114,6 @@ public class RobocodeRunner {
 		engine.setVisible(true); // true
 
 		// Setup the battle specification
-		// int numberOfRounds = 10;
 		BattlefieldSpecification battlefield = new BattlefieldSpecification(gameWidth, gameHeight); // 800x600
 
 		// engine.getLocalRepository("sample.Corners, sample.MujRobot");

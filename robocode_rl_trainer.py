@@ -34,14 +34,7 @@ except Exception as e:
 # Third-party libraries:
 try:
     pass
-    #import tensorflow as tf
-
-    # Libraries for web scraping
-    #import requests  # HTTP library for sending requests
-    #from bs4 import BeautifulSoup  # Library for parsing HTML and XML documents
-
     # Data manipulation and analysis
-    #import xarray as xr  # Library for working with labeled multi-dimensional arrays
     #import numpy as np  # Fundamental package for scientific computing
     #from scipy.stats import skew, kurtosis, hmean, gmean, linregress  # Library for statistics and regression analysis
     #from scipy.fftpack import dct  # Library for discrete cosine transform
@@ -51,9 +44,6 @@ try:
     #import matplotlib.pyplot as plt  # Library for creating static, animated, and interactive visualizations
     #import matplotlib as mpl  # Library for customization of matplotlib plots
     #import matplotlib.colors as mcolors  # Library for color mapping and normalization
-
-    # User interaction
-    #import keyboard  # Library for detecting keyboard input
 except ImportError as L_err:
     print("Chyba v načtení knihovny třetích stran: {0}".format(L_err))
     exit(1)
@@ -117,10 +107,10 @@ class Utils:
 class GameSettingsModifier:
     # parameters for game.properties
     path_to_game_properties: str = "RoboCode/config/game.properties"
-    gameWidth: int = 800  # game width: 800
-    gameHeight: int = 600  # game height: 600
-    numberOfRounds: int = 100  # number of rounds: 10
-    isVisible: bool = True  # Game is visible: True
+    gameWidth: int = 800  # game width: 800  <400; 5000>
+    gameHeight: int = 600  # game height: 600 <400; 5000>
+    numberOfRounds: int = 10  # number of rounds: 10 <1; max_int(2_147_483_647)>
+    isVisible: bool = False  # Game is visible: True
 
     enemies: dict = {
         0: "",
@@ -143,7 +133,7 @@ class GameSettingsModifier:
         17: "PyRobotClient"
     }
 
-    listOfEnemies: str = "Crazy, 13, 17"  # opponents list: Crazy, 13, 17
+    listOfEnemies: str = "Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
 
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
@@ -193,8 +183,27 @@ class GameSettingsModifier:
                 regex_part = rf"\d+"
             case "bool":
                 regex_part = rf"\w+"
+                var_value = var_value.lower()
+            case "str":
+                regex_part = rf".*"
+                var_value = var_value[1:-1] if len(var_value) > 0 else var_value
+            case _:
+                print("Špatný typ u proměnné")
+                exit(1)
+
+        # odstran prefix
         var_text = var_text.removeprefix("self.")
-        content = re.sub(rf"{var_text}\s*=\s*"+regex_part, f"{var_text} = {var_value}", content)
+
+        # Hledání shody
+        match = re.search(rf"{var_text}\s*=\s*" + regex_part, content)
+
+        # Pokud regex nenalezne shodu, přidej text na začátek obsahu
+        if match is None:
+            content = f"{var_text} = {var_value}\n" + content
+        else:
+            # Pokud byla nalezena shoda, uprav ji
+            content = re.sub(rf"{var_text}\s*=\s*" + regex_part, f"{var_text} = {var_value}", content)
+
         return content
 
     def set_game_properties(self):
@@ -206,17 +215,11 @@ class GameSettingsModifier:
         content = self.update_content(f'{self.gameHeight=}'.split('='), 'int', content)
         content = self.update_content(f'{self.numberOfRounds=}'.split('='), 'int', content)
         content = self.update_content(f'{self.isVisible=}'.split('='), 'bool', content)
+        content = self.update_content(f'{self.listOfEnemies=}'.split('='), 'str', content)
 
         print("Game new properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
-        """
-
-        new_content = re.sub(
-            r'String seznamProtivniku\s*=\s*".*?";',
-            f'String seznamProtivniku = "{self.opponent_list}";',
-            new_content
-        )"""
-        pass
+        self.write_file(self.path_to_game_properties, content)
 
     def set_robocode_properties(self):
         pass
