@@ -135,6 +135,7 @@ class GameSettingsModifier:
 
     listOfEnemies: str = "Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
 
+
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
     # TODO
