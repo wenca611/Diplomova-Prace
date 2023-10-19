@@ -96,7 +96,7 @@ class Utils:
         print("""============Optimalizace řízení s pomocí zpětnovazebního učení na platformě Robocode================
 -autor: Bc. Václav Pastušek
 -škola: VUT FEKT
--minimální požadovaná verze Pythonu: 3.9
+-minimální požadovaná verze Pythonu: 3.10
 -aktuální verze Pythonu: {}
 -VUT číslo: 204437\n""".format(platform.python_version()))
 
@@ -184,18 +184,28 @@ class GameSettingsModifier:
             print(f"Chyba při zápisu souboru: {e}")
             exit(1)
 
-    def set_properties(self, filename):
-        pass
+    @staticmethod
+    def update_content(var, var_type, content):
+        var_text, var_value = var
+        regex_part = ""
+        match var_type:
+            case "int":
+                regex_part = rf"\d+"
+            case "bool":
+                regex_part = rf"\w+"
+        var_text = var_text.removeprefix("self.")
+        content = re.sub(rf"{var_text}\s*=\s*"+regex_part, f"{var_text} = {var_value}", content)
+        return content
 
     def set_game_properties(self):
         content = self.read_file(self.path_to_game_properties)
         print("Game properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
-        content = re.sub(r'numberOfRounds\s*=\s*\d+', f"numberOfRounds = {self.numberOfRounds}", content)
-        content = re.sub(r'gameWidth\s*=\s*\d+', f"gameWidth = {self.gameWidth}", content)
-        content = re.sub(r'gameHeight\s*=\s*\d+', f"gameHeight = {self.gameHeight}", content)
-        content = re.sub(r'numberOfRounds\s*=\s*\d+', f"numberOfRounds = {self.numberOfRounds}", content)
-        content = re.sub(r'isVisible\s*=\s*\w+', f"isVisible = {str(self.isVisible).lower()}", content)
+        content = self.update_content(f'{self.numberOfRounds=}'.split('='), 'int', content)
+        content = self.update_content(f'{self.gameWidth=}'.split('='), 'int', content)
+        content = self.update_content(f'{self.gameHeight=}'.split('='), 'int', content)
+        content = self.update_content(f'{self.numberOfRounds=}'.split('='), 'int', content)
+        content = self.update_content(f'{self.isVisible=}'.split('='), 'bool', content)
 
         print("Game new properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
