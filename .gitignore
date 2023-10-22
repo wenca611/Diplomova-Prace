@@ -244,6 +244,8 @@ fabric.properties
 /bin/
 /RoboCode/robots/
 RoboCode/config/
+*.dmp
+*.phd
 
 # Eclipse
 .classpath
