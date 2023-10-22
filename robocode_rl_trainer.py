@@ -22,7 +22,7 @@ try:
     #import itertools  # Functions creating iterators for efficient looping
     import signal  # Set handlers for asynchronous events
     import re  # Regular expression operations
-    import time as tim  # Time access and conversions
+    #import time as tim  # Time access and conversions
     #import concurrent.futures  # Launching parallel tasks
 except ImportError as L_err:
     print("Chyba v načtení standardní knihovny: {0}".format(L_err))
@@ -334,9 +334,8 @@ class UserInterface:
         help_list = ["h", "help", "t", "tut", "tutorial", "n", "napoveda"]
         end_list = ["k", "konec", "e", "end", "x", "."]
         while True:
-            user_input: str = input(text + " (1/10/2.3e6/help/end): ")
+            user_input: str = input(text + " (1, 100, 2.3e6, help, end): ")
             low_user_input: str = user_input.lower()
-
             try:
                 num = float(low_user_input)
                 if num > 0. and num.is_integer():
@@ -462,20 +461,7 @@ server_thread = threading.Thread(target=start_server_with_delay)
 #server_thread.join()
 start_client()
 
-
 exit(0)"""
-
-"""# client
-command = [
-    "C:\\Users\\venca611\\.jdks\\semeru-11.0.20\\bin\\java.exe",
-    "-javaagent:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\lib\\idea_rt.jar=60349:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\bin",
-    "-Dfile.encoding=UTF-8",
-    "-classpath",
-    "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\target\\classes;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\bcel-6.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\codesize-1.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\junit-4.13.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\hamcrest-core-1.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.ui-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\picocontainer-2.14.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.api-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.core-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.host-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.sound-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.battle-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.repository-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\positional-protocol-1.1.0-SNAPSHOT.jar",
-    "cz.vutbr.feec.robocode.battle.StudentServerRunner"
-]
-
-subprocess.run(command)"""
 
 """# server
 command = [
@@ -521,29 +507,6 @@ if run_errors:
     print(run_errors)"""
 
 # path_to_java = "RoboCode/src/cz/vutbr/feec/robocode/battle/"
-"""
-# Spuštění Maven kompilace s nastavením cesty k nativním knihovnám
-maven_dir = "RoboCode"
-
-# Získání cesty ke složce, ve které je aktuální skript
-current_dir = os.path.dirname(os.path.abspath(__file__))
-print("aktuální složka:", current_dir)
-
-# Cesta k podadresáři s knihovnami
-library_dir = os.path.join(current_dir, 'RoboCode\\libraries')
-subprocess.run(['C:\\Program Files\\Java\\apache-maven-3.9.4\\bin\\mvn', 'clean', 'install', f'-Djava.library.path={library_dir}'], cwd=maven_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-# Kompilace projektu pomocí Maven
-compile_process = subprocess.Popen(["mvn", "compile"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-compile_output, compile_errors = compile_process.communicate()
-
-# Výpis výstupu kompilace
-print("Maven compile output:")
-print(compile_output)
-
-if compile_errors:
-    print("Maven compile errors:")
-    print(compile_errors)
-"""
 
 """# Cesta k adresáři, kde se nachází knihovny (JAR soubory)
 libs_path = "D:/FEKT/Ing/diplomka/RoboCode/RoboCode/libraries"
@@ -563,10 +526,6 @@ exit(0)
 
 
 
-
-
-
-
 import os
 import subprocess
 import time
@@ -581,12 +540,6 @@ print("cesta ke knihovnám:", library_dir)
 
 # Spuštění Maven kompilace s nastavením cesty k nativním knihovnám
 maven_dir = "RoboCode" """
-# subprocess.run(['C:\\Program Files\\Java\\apache-maven-3.9.4\\bin\\mvn', 'clean', 'install', f'-Djava.library.path={library_dir}'], cwd=maven_dir, shell=True)
-
-# Vyčištění a kompilace pomocí Mavenu
-# subprocess.run(['C:\\Program Files\\Java\\apache-maven-3.9.4\\bin\\mvn', 'clean'], cwd=maven_dir, shell=True)
-# subprocess.run(['C:\\Program Files\\Java\\apache-maven-3.9.4\\bin\\mvn', 'validate'], cwd=maven_dir, shell=True)
-# subprocess.run(['C:\\Program Files\\Java\\apache-maven-3.9.4\\bin\\mvn', 'compile'], cwd=maven_dir, shell=True)
 
 # Sestavení cest ke zdrojovým souborům Java programů relativně k aktuálnímu adresáři
 """program_path = 'RoboCode\\src\\cz\\vutbr\\feec\\robocode\\battle'
@@ -627,9 +580,7 @@ output_file2 = os.path.join(current_dir, 'output2.txt')
 with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_file:
     subprocess.run(['java', '-cp', current_dir, 'cz.vutbr.feec.robocode.battle.RobocodeRunner'], stdout=stdout_file, stderr=stderr_file)
 """
-# time.sleep(5)
 
-# print("Java programy byly zkompilovány, spuštěny a výstupy uloženy do souborů.")
 
 
 
@@ -652,15 +603,32 @@ if __name__ == '__main__':
     game_settings.set_window_properties()
     print("Nastavení dokončeno")
 
-    episode: int = UserInterface.input_loop("Zadejte počet epizod")
-    print("Počet epizod je:", episode) if DEBUG_PRINT or 1 else None
+    num_episode: int = UserInterface.input_loop("\nZadejte počet epizod")
+    print("Počet epizod je:", num_episode) if DEBUG_PRINT or 1 else None
 
     # Vyčkání na dokončení vlákna
     tensorflow_thread.join()
     print("Načten Tensorflow") if DEBUG_PRINT else None
 
-    # nastavení epizod, možnost interakce or not
+    for episode in range(num_episode):
+        print("TODO")
+        print("Epizoda", episode+1, "dokončena, skóre je ...")
+
+
     # zapnuti robocode a počkání na konec
     # načtení dat, načtení neuronky a zpěně gradient a uložení neuronky
     # konec epizod
-    # uložení dat pro grafy
+    # uložení dat pro grafy, jako ceny
+    # taky projet třeba dvojice botů a ukázat do tabulky výstup
+    """
+    +--------+-----------------+--------------+--------------+-------------+------------+------------------+------------------+
+    | Číslo | Jméno bota | Celkové skóre | Nejlepší skóre | Nejhorší skóre | Rozdíl skóre | Nejlepší proti | Nejhorší proti |
+    | | | | | | | (Číslo bota) | (Číslo bota) |
+    +--------+-----------------+--------------+--------------+-------------+------------+------------------+------------------+
+    | 1 | Bot A | 350 | 400 | 200 | 200 | 3 | 2 |
+    | 2 | Bot B | 420 | 500 | 250 | 250 | 4 | 1 |
+    | 3 | Bot C | 290 | 350 | 180 | 170 | 4 | 1 |
+    | 4 | Bot D | 550 | 600 | 300 | 300 | 2 | 3 |
+    +--------+-----------------+--------------+--------------+-------------+------------+------------------+------------------+
+    """
+    # sledování cen u agenta, během epizod
