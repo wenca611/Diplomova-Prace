@@ -247,6 +247,7 @@ RoboCode/config/
 *.dmp
 *.phd
 *.trc
+javacore.*.txt
 
 # Eclipse
 .classpath
