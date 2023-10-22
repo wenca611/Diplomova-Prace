@@ -111,7 +111,7 @@ public class RobocodeRunner {
 		engine.addBattleListener(battleListener);
 
 		// Show the battles
-		engine.setVisible(true); // true
+		engine.setVisible(isVisible); // true
 
 		// Setup the battle specification
 		BattlefieldSpecification battlefield = new BattlefieldSpecification(gameWidth, gameHeight); // 800x600

@@ -109,8 +109,8 @@ class GameSettingsModifier:
     path_to_game_properties: str = "RoboCode/config/game.properties"
     gameWidth: int = 800  # game width: 800  <400; 5000>
     gameHeight: int = 600  # game height: 600 <400; 5000>
-    numberOfRounds: int = 10  # number of rounds: 10 <1; max_int(2_147_483_647)>
-    isVisible: bool = False  # Game is visible: True
+    numberOfRounds: int = 100  # number of rounds: 10 <1; max_int(2_147_483_647)>
+    isVisible: bool = True  # Game is visible: True
 
     enemies: dict = {
         0: "",
@@ -134,11 +134,23 @@ class GameSettingsModifier:
     }
 
     listOfEnemies: str = "Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
-
+    # listOfEnemies: str = "1, "*999 + "1"  # 1000 tanks ≈ 3 FPS and 3 TPS
 
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
-    # TODO
+    view_ground = True  # True
+    rendering_method = 2  # 0-2 Default, Quality, Speed
+    view_FPS = True  # True
+    rendering_antialiasing = 2  # 0-2 Default, On, Off
+    sound_enableSound = False  # True
+
+
+
+
+
+    # parameters for game.properties
+    path_to_window_properties: str = "RoboCode/config/window.properties"
+    RobocodeFrame: str = "0,0,1200,800"  # RoboCode frame: 0, 0, 1200, 800
 
     def __init__(self) -> None:
         # Rozdělit seznam protivníků podle čárky a odstranit případné mezery
@@ -159,7 +171,7 @@ class GameSettingsModifier:
                 content = file.read()
             return content
         except FileNotFoundError:
-            print(f"Soubor {filename} nebyl nalezen.")
+            print(f"Soubor {filename.removeprefix('RoboCode/config/')} nebyl nalezen.")
             exit(1)
         except Exception as e:
             print(f"Chyba při čtení souboru: {e}")
@@ -170,15 +182,17 @@ class GameSettingsModifier:
         try:
             with open(filename, 'w') as file:
                 file.write(content)
-            print(f"Soubor {filename} byl úspěšně uložen.")
+            print(f"Soubor {filename.removeprefix('RoboCode/config/')} byl úspěšně uložen.")
         except Exception as e:
             print(f"Chyba při zápisu souboru: {e}")
             exit(1)
 
     @staticmethod
     def update_content(var, var_type, content):
-        var_text, var_value = var
-        regex_part = ""
+        var_text, var_value= var
+        # odstran prefix
+        var_text: str = var_text.removeprefix("self.")
+        regex_part: str = ""
         match var_type:
             case "int":
                 regex_part = rf"\d+"
@@ -188,12 +202,24 @@ class GameSettingsModifier:
             case "str":
                 regex_part = rf".*"
                 var_value = var_value[1:-1] if len(var_value) > 0 else var_value
+            case "robocode_bool" | "robocode_int" | "robocode_str":
+                var_text = "robocode.options." + var_text.replace("_", ".")
+                match var_type:
+                    case "robocode_bool":
+                        regex_part = rf"\w+"
+                        var_value = var_value.lower()
+                    case "robocode_int":
+                        regex_part = rf"\d+"
+                    case "robocode_str":
+                        regex_part = rf".*"
+                        var_value = var_value[1:-1] if len(var_value) > 0 else var_value
+            case "frame":
+                var_text = "net.sf.robocode.ui.dialog." + var_text
+                var_value = var_value[1:-1] if len(var_value) > 0 else var_value
+                regex_part = rf".*"
             case _:
                 print("Špatný typ u proměnné")
                 exit(1)
-
-        # odstran prefix
-        var_text = var_text.removeprefix("self.")
 
         # Hledání shody
         match = re.search(rf"{var_text}\s*=\s*" + regex_part, content)
@@ -219,11 +245,30 @@ class GameSettingsModifier:
         content = self.update_content(f'{self.listOfEnemies=}'.split('='), 'str', content)
 
         print("Game new properties[:300]:", content[:300]) if DEBUG_PRINT else None
-
         self.write_file(self.path_to_game_properties, content)
 
     def set_robocode_properties(self):
-        pass
+        content = self.read_file(self.path_to_robocode_properties)
+        print("Robocode properties[:300]:", content[:300]) if DEBUG_PRINT else None
+
+        content = self.update_content(f'{self.view_ground=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.rendering_method=}'.split('='), 'robocode_int', content)
+        content = self.update_content(f'{self.view_FPS=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.rendering_antialiasing=}'.split('='), 'robocode_int', content)
+        content = self.update_content(f'{self.sound_enableSound=}'.split('='), 'robocode_bool', content)
+
+
+        print("Robocode new properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        self.write_file(self.path_to_robocode_properties, content)
+
+    def set_window_properties(self):
+        content = self.read_file(self.path_to_window_properties)
+        #print("Window properties[:300]:", content[:300]) if DEBUG_PRINT else None
+
+        content = self.update_content(f'{self.RobocodeFrame=}'.split('='), 'frame', content)
+
+        #print("Window new properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        self.write_file(self.path_to_window_properties, content)
 
 
 
@@ -606,10 +651,11 @@ if __name__ == '__main__':
     # Prints out a welcome message.
     Utils.welcome()
 
-    # nastavení konfigurace hry a platformy
+    # nastavení konfigurace hry, platformy a obrazovky
     game_settings = GameSettingsModifier()
     game_settings.set_game_properties()
     game_settings.set_robocode_properties()
+    game_settings.set_window_properties()
 
     # Vyčkání na dokončení vlákna
     tensorflow_thread.join()
