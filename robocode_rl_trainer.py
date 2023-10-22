@@ -22,7 +22,7 @@ try:
     #import itertools  # Functions creating iterators for efficient looping
     import signal  # Set handlers for asynchronous events
     import re  # Regular expression operations
-    #import time as tim  # Time access and conversions
+    import time as tim  # Time access and conversions
     #import concurrent.futures  # Launching parallel tasks
 except ImportError as L_err:
     print("Chyba v načtení standardní knihovny: {0}".format(L_err))
@@ -40,7 +40,7 @@ try:
     #from scipy.fftpack import dct  # Library for discrete cosine transform
 
     # Visualization
-    #import tqdm  # displaying progress bars
+    # from tqdm import tqdm  # displaying progress bars
     #import matplotlib.pyplot as plt  # Library for creating static, animated, and interactive visualizations
     #import matplotlib as mpl  # Library for customization of matplotlib plots
     #import matplotlib.colors as mcolors  # Library for color mapping and normalization
@@ -57,18 +57,16 @@ def load_tensorflow() -> types.ModuleType:
         import tensorflow as tf
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
         return tf
-    except ImportError as L_err:
-        print("Chyba v načtení knihovny třetích stran: {0}".format(L_err))
+    except ImportError as load_err:
+        print("Chyba v načtení knihovny třetích stran: {0}".format(load_err))
         exit(1)
-    except Exception as e:
-        print(f"Jiná chyba v načtení knihovny třetích stran: {e}")
+    except Exception as exc:
+        print(f"Jiná chyba v načtení knihovny třetích stran: {exc}")
         exit(1)
 
 
 # DEBUG option
-DEBUG_PRINT = True
-
-layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
+DEBUG_PRINT = False
 
 
 class Utils:
@@ -91,15 +89,27 @@ class Utils:
 -VUT číslo: 204437\n""".format(platform.python_version()))
 
     @staticmethod
-    def handle_keyboard_interrupt(frame: Optional[object] = None, signal: Optional[object] = None) -> None:
+    def pyhelp() -> None:
+        """
+        Prints Help text
+
+        :return: None
+        """
+        print("""\nNápověda:
+pro výpis nápovědy použijte: 'h', 'n' nebo 't'
+pro výběr epizod použijte: '1', '10', '1e6',... [e>0]
+a pro ukončení programu použijte: 'k', 'e', 'x' nebo '.'\n""")
+
+    @staticmethod
+    def handle_keyboard_interrupt(frame: Optional[object] = None, signal_interrupt: Optional[object] = None) -> None:
         """
         A function for handling keyboard interrupt signal.
 
         :param frame: Not used.
-        :param signal: Not used.
+        :param signal_interrupt: Not used.
         :return: None
         """
-        _, _ = frame, signal  # to reduce warnings
+        _, _ = frame, signal_interrupt  # to reduce warnings
         print("\nUkončeno stiskem klávesy Ctrl+C nebo tlačítkem Stop")
         exit()
 
@@ -139,14 +149,32 @@ class GameSettingsModifier:
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
     view_ground = True  # True
-    rendering_method = 2  # 0-2 Default, Quality, Speed
+    rendering_method = 2  # 2; 0-2 Default, Quality, Speed
     view_FPS = True  # True
-    rendering_antialiasing = 2  # 0-2 Default, On, Off
-    sound_enableSound = False  # True
-
-
-
-
+    rendering_antialiasing = 0  # 2; 0-2 Default, On, Off
+    sound_enableSound = True  # True
+    view_robotNames = True  # True
+    battle_desiredTPS = 50  # 50; TPS<0 => max TPS; TPS=0 => error!
+    sound_enableRobotDeath = True  # True
+    view_TPS = True  # True
+    sound_enableRobotCollision = True  # True
+    rendering_forceBulletColor = True  # True
+    rendering_noBuffers = 3  # 0; 0-3 [max ~40] Without buffer, Single, Double, Triple
+    view_explosions = True  # True
+    rendering_text_antialiasing = 0  # 2; 0-2 Default, On, Off
+    rendering_bufferImages = True  # True
+    view_explosionDebris = True  # True
+    sound_enableBulletHit = True  # True
+    view_preventSpeedupWhenMinimized = False  # False
+    view_robotEnergy = True  # True
+    common_dontHideRankings = True  # True
+    sound_enableWallCollision = True  # True
+    common_showResults = True  # True
+    sound_enableMixerVolume = True  # True
+    view_sentryBorder = False  # False
+    sound_enableGunshot = True  # True
+    common_appendWhenSavingResults = True  # True
+    view_scanArcs = False  # False
 
     # parameters for game.properties
     path_to_window_properties: str = "RoboCode/config/window.properties"
@@ -173,8 +201,8 @@ class GameSettingsModifier:
         except FileNotFoundError:
             print(f"Soubor {filename.removeprefix('RoboCode/config/')} nebyl nalezen.")
             exit(1)
-        except Exception as e:
-            print(f"Chyba při čtení souboru: {e}")
+        except Exception as exc:
+            print(f"Chyba při čtení souboru: {exc}")
             exit(1)
 
     @staticmethod
@@ -183,36 +211,33 @@ class GameSettingsModifier:
             with open(filename, 'w') as file:
                 file.write(content)
             print(f"Soubor {filename.removeprefix('RoboCode/config/')} byl úspěšně uložen.")
-        except Exception as e:
-            print(f"Chyba při zápisu souboru: {e}")
+        except Exception as exc:
+            print(f"Chyba při zápisu souboru: {exc}")
             exit(1)
 
     @staticmethod
     def update_content(var, var_type, content):
-        var_text, var_value= var
+        var_text, var_value = var
         # odstran prefix
         var_text: str = var_text.removeprefix("self.")
         regex_part: str = ""
         match var_type:
             case "int":
-                regex_part = rf"\d+"
+                regex_part = rf"-?\d+"
             case "bool":
                 regex_part = rf"\w+"
                 var_value = var_value.lower()
             case "str":
                 regex_part = rf".*"
                 var_value = var_value[1:-1] if len(var_value) > 0 else var_value
-            case "robocode_bool" | "robocode_int" | "robocode_str":
+            case "robocode_bool" | "robocode_int":
                 var_text = "robocode.options." + var_text.replace("_", ".")
                 match var_type:
                     case "robocode_bool":
                         regex_part = rf"\w+"
                         var_value = var_value.lower()
                     case "robocode_int":
-                        regex_part = rf"\d+"
-                    case "robocode_str":
-                        regex_part = rf".*"
-                        var_value = var_value[1:-1] if len(var_value) > 0 else var_value
+                        regex_part = rf"-?\d+"
             case "frame":
                 var_text = "net.sf.robocode.ui.dialog." + var_text
                 var_value = var_value[1:-1] if len(var_value) > 0 else var_value
@@ -249,32 +274,90 @@ class GameSettingsModifier:
 
     def set_robocode_properties(self):
         content = self.read_file(self.path_to_robocode_properties)
-        print("Robocode properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        print("Robocode properties[:500]:", content[:500]) if DEBUG_PRINT else None
 
         content = self.update_content(f'{self.view_ground=}'.split('='), 'robocode_bool', content)
         content = self.update_content(f'{self.rendering_method=}'.split('='), 'robocode_int', content)
         content = self.update_content(f'{self.view_FPS=}'.split('='), 'robocode_bool', content)
         content = self.update_content(f'{self.rendering_antialiasing=}'.split('='), 'robocode_int', content)
         content = self.update_content(f'{self.sound_enableSound=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_robotNames=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.battle_desiredTPS=}'.split('='), 'robocode_int', content)
+        content = self.update_content(f'{self.sound_enableRobotDeath=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_TPS=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.sound_enableRobotCollision=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.rendering_forceBulletColor=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.rendering_noBuffers=}'.split('='), 'robocode_int', content)
+        content = self.update_content(f'{self.view_explosions=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.rendering_text_antialiasing=}'.split('='), 'robocode_int', content)
+        content = self.update_content(f'{self.rendering_bufferImages=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_explosionDebris=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.sound_enableBulletHit=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_preventSpeedupWhenMinimized=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_robotEnergy=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.common_dontHideRankings=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.sound_enableWallCollision=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.common_showResults=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.sound_enableMixerVolume=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_sentryBorder=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.sound_enableGunshot=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.common_appendWhenSavingResults=}'.split('='), 'robocode_bool', content)
+        content = self.update_content(f'{self.view_scanArcs=}'.split('='), 'robocode_bool', content)
 
-
-        print("Robocode new properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        print("Robocode new properties[:500]:", content[:500]) if DEBUG_PRINT else None
         self.write_file(self.path_to_robocode_properties, content)
 
     def set_window_properties(self):
         content = self.read_file(self.path_to_window_properties)
-        #print("Window properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        print("Window properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
         content = self.update_content(f'{self.RobocodeFrame=}'.split('='), 'frame', content)
 
-        #print("Window new properties[:300]:", content[:300]) if DEBUG_PRINT else None
+        print("Window new properties[:300]:", content[:300]) if DEBUG_PRINT else None
         self.write_file(self.path_to_window_properties, content)
 
 
+class UserInterface:
+    """
+    The UserInterface class represents a collection of static methods used for handling user input and
+    parsing it into the desired format.
+    """
+
+    @staticmethod
+    def input_loop(text: str):
+        """
+        Loops until valid user input is entered.
+
+        :param text: message to display to the user
+        :return: valid user input
+        """
+        help_list = ["h", "help", "t", "tut", "tutorial", "n", "napoveda"]
+        end_list = ["k", "konec", "e", "end", "x", "."]
+        while True:
+            user_input: str = input(text + " (1/10/2.3e6/help/end): ")
+            low_user_input: str = user_input.lower()
+
+            try:
+                num = float(low_user_input)
+                if num > 0. and num.is_integer():
+                    return int(num)
+                else:
+                    print("Zadejte celé číslo větší než 0.")
+            except ValueError:
+                if low_user_input in help_list:
+                    # Display help message
+                    Utils.pyhelp()
+                elif low_user_input in end_list:
+                    # Exit program if user input is in end list
+                    exit()
+                else:
+                    print("Zadali jste nesprávný vstup.")
 
 
+"""
+layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
-"""def create_model():
+def create_model():
     global layer_sizes
     if len(layer_sizes) < 3:
         del layer_sizes
@@ -291,99 +374,9 @@ class GameSettingsModifier:
 
     return model
 
-
 create_model()
 
 """
-
-# TODO, předat proměnnou s výběrem do funkce a zjistit si název, upravit ho a vykonat úpravu v suboru!!!
-"""robocode.options.view.ground=false
-robocode.options.rendering.method=0
-robocode.options.rendering.antialiasing=2
-robocode.options.sound.enableSound=false
-robocode.options.sound.enableMixerPan=true
-robocode.options.common.notifyAboutNewBetaVersions=false
-robocode.options.common.enableAutoRecording=false
-robocode.options.view.robotNames=false
-robocode.options.common.enableReplayRecording=false
-robocode.options.sound.enableRobotDeath=false
-robocode.options.sound.enableRobotCollision=false
-robocode.options.rendering.forceBulletColor=false
-robocode.options.rendering.noBuffers=1
-robocode.options.view.explosions=false
-robocode.options.rendering.text.antialiasing=2
-robocode.options.rendering.bufferImages=false
-robocode.options.view.explosionDebris=false
-robocode.options.sound.enableBulletHit=false
-robocode.options.view.preventSpeedupWhenMinimized=false
-robocode.options.view.robotEnergy=false
-robocode.options.common.dontHideRankings=false
-robocode.options.sound.enableWallCollision=false
-robocode.versionchecked=01/01/9999 10\:10\:10
-robocode.options.common.showResults=false
-robocode.options.sound.enableMixerVolume=true
-robocode.options.sound.mixer=DirectAudioDevice
-robocode.options.view.sentryBorder=false
-robocode.options.sound.enableGunshot=false
-robocode.options.common.appendWhenSavingResults=false
-robocode.options.view.scanArcs=false"""
-"""robocode_options_view_FPS: bool = True
-robocode_options_view_TPS: bool = True
-robocode_options_battle_desiredTPS: int = 30
-
-path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
-del content, new_content
-
-# Open for read
-with open(path_to_robocode_properties, "r") as robocode_properties_file:
-    content = robocode_properties_file.read()
-
-new_content = re.sub(
-    r'robocode.options.view.FPS=\w+',
-    f'robocode.options.view.FPS={str(robocode_options_view_FPS).lower()}',  # Převod na malá písmena
-    content
-)
-
-new_content = re.sub(
-    r'robocode.options.view.TPS=\w+',
-    f'robocode.options.view.TPS={str(robocode_options_view_TPS).lower()}',  # Převod na malá písmena
-    new_content
-)
-
-new_content = re.sub(
-    r'robocode.options.battle.desiredTPS=\d+',
-    f'robocode.options.battle.desiredTPS={robocode_options_battle_desiredTPS}',  # Převod na malá písmena
-    new_content
-)
-
-# Zapsat upravený obsah zpět do souboru
-with open(path_to_robocode_properties, "w") as robocode_properties_file:
-    robocode_properties_file.write(new_content)
-
-print("Nastavení konfigu bylo úspěšné.")
-
-path_to_client: str = "RoboCode/src/sample/PyRobotClient.java"
-del content, new_content
-
-# Open for read
-with open(path_to_client, "r") as client_file:
-    content = client_file.read()"""
-
-# Najděte všechny výskyty řetězce, které chcete nahradit
-"""matches = re.findall(r'\{0\.', content)
-print(matches)"""
-
-"""new_content = re.sub(
-    r'\{\d\., \d\., \d\., \d\.},',
-    '{1., 1., 1., 1.},',
-    content
-)
-
-# Zapsat upravený obsah zpět do souboru
-with open(path_to_client, "w") as client_file:
-    client_file.write(new_content)
-
-print("Nastavení konfigu bylo úspěšné.")"""
 
 # Adresář, kde se nachází váš Java program
 """java_program_directory = "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode"
@@ -641,7 +634,7 @@ with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_f
 
 
 if __name__ == '__main__':
-    # Vytvořte vlákno pro načítání TensorFlow.
+    # Vlákno pro načítání TensorFlow.
     tensorflow_thread = threading.Thread(target=load_tensorflow)
     tensorflow_thread.start()
 
@@ -653,19 +646,19 @@ if __name__ == '__main__':
 
     # nastavení konfigurace hry, platformy a obrazovky
     game_settings = GameSettingsModifier()
+    print("Nastavení předdefinovaných vlastností:")
     game_settings.set_game_properties()
     game_settings.set_robocode_properties()
     game_settings.set_window_properties()
+    print("Nastavení dokončeno")
+
+    episode: int = UserInterface.input_loop("Zadejte počet epizod")
+    print("Počet epizod je:", episode) if DEBUG_PRINT or 1 else None
 
     # Vyčkání na dokončení vlákna
     tensorflow_thread.join()
     print("Načten Tensorflow") if DEBUG_PRINT else None
 
-    # uvítání
-    # vykonani game.properties
-    # vykonání robocode.properties
-    # čekání na tensorflow
-    # TODO, pokud příkaz chybí, tak jej doplnit na začátek nebo (na konec)???
     # nastavení epizod, možnost interakce or not
     # zapnuti robocode a počkání na konec
     # načtení dat, načtení neuronky a zpěně gradient a uložení neuronky
