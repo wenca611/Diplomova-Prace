@@ -18,6 +18,7 @@ try:
     from typing import Optional  # Support for type hints
     import types
     import threading
+    import subprocess
     #import functools  # Higher-order functions and operations on callable objects
     #import itertools  # Functions creating iterators for efficient looping
     import signal  # Set handlers for asynchronous events
@@ -353,6 +354,67 @@ class UserInterface:
                     print("Zadali jste nesprávný vstup.")
 
 
+class RobocodeRunner:
+    """
+    TODO
+    """
+    command: list[str] = [
+        r'C:\Users\venca611\.jdks\semeru-11.0.20-1\bin\java.exe',
+        r'-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.2\lib\idea_rt.jar=65391:'
+        r'C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.2\bin',
+        '-Dfile.encoding=UTF-8',
+        '-classpath',
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\target\classes;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.api\1.9.4.3\robocode.api-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.core\1.9.4.3\robocode.core-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\org\picocontainer\picocontainer\2.14.2\picocontainer-2.14.2.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.battle\1.9.4.3\robocode.battle-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.host\1.9.4.3\robocode.host-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.repository\1.9.4.3\robocode.repository-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\codesize\1.2\codesize-1.2.jar;'
+        r'C:\Users\venca611\.m2\repository\org\apache\bcel\bcel\6.2\bcel-6.2.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.ui\1.9.4.3\robocode.ui-1.9.4.3.jar;'
+        r'C:\Users\venca611\.m2\repository\net\sf\robocode\robocode.sound\1.9.4.3\robocode.sound-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\bcel-6.2.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\codesize-1.2.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\junit-4.13.2.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\hamcrest-core-1.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.ui-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\picocontainer-2.14.2.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.api-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.core-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.host-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.sound-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.battle-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\robocode.repository-1.9.4.3.jar;'
+        r'D:\FEKT\Ing\diplomka\RoboCodeProject\RoboCode\libraries\positional-protocol-1.1.0-SNAPSHOT.jar',
+        'cz.vutbr.feec.robocode.battle.RobocodeRunner'
+    ]
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def __init__(self):
+        print(self.current_dir)
+        java_program_directory = self.current_dir + r"\RoboCode"
+
+        # Nastavíme pracovní adresář na adresář s Java programem
+        os.chdir(java_program_directory)
+
+        # Spusťte příkaz a uložte výstup a chybový výstup
+        process = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+        # Získání výstupu a chybového výstupu
+        stdout, stderr = process.communicate()
+
+        # Výstup a chybový výstup jsou nyní uloženy v proměnných 'stdout' a 'stderr'.
+        print("stdout:")
+        print(stdout)
+        print("stderr:")
+        print(stderr)
+
+        os.chdir(self.current_dir)
+
+
 """
 layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
 
@@ -376,213 +438,6 @@ def create_model():
 create_model()
 
 """
-
-# Adresář, kde se nachází váš Java program
-"""java_program_directory = "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode"
-
-# Nastavíme pracovní adresář na adresář s Java programem
-os.chdir(java_program_directory)
-
-
-# Funkce pro spuštění příkazu a chycení výstupu
-def run_command(command):
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
-        print("Výstup:", output.decode("utf-8"))
-    except subprocess.CalledProcessError as e:
-        print("Chyba při spuštění příkazu:", e.output.decode("utf-8"))
-
-
-# Spustit příkazy Maven "clean" a "validate"
-# run_command(maven_clean_command)
-# print("maven clean done")
-# run_command(maven_validate_command)
-# print("maven validate done")
-# run_command(maven_compile_command)
-# print("Maven compile done")
-
-# Aktualizovaný příkaz pro spuštění vašeho Java programu
-java_command = [
-    "C:\\Users\\venca611\\.jdks\\semeru-11.0.20\\bin\\java.exe",
-    "-javaagent:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\lib\\idea_rt.jar=55777:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\bin",
-    "-Dfile.encoding=UTF-8",
-    "-classpath",
-    "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\target\\classes;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\bcel-6.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\codesize-1.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\junit-4.13.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\hamcrest-core-1.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.ui-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\picocontainer-2.14.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.api-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.core-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.host-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.sound-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.battle-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.repository-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\positional-protocol-1.1.0-SNAPSHOT.jar",
-    "cz.vutbr.feec.robocode.battle.RobocodeRunner"
-]
-
-# "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.2\lib\idea_rt.jar=61629:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.2\bin" -Dfile.encoding=UTF-8 -classpath D:\FEKT\Ing\diplomka\RoboCode\RoboCode\target\classes;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\bcel-6.2.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\codesize-1.2.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\junit-4.13.2.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\hamcrest-core-1.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.ui-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\picocontainer-2.14.2.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.api-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.core-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.host-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.sound-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.battle-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\robocode.repository-1.9.4.3.jar;D:\FEKT\Ing\diplomka\RoboCode\RoboCode\libraries\positional-protocol-1.1.0-SNAPSHOT.jar cz.vutbr.feec.robocode.battle.RobocodeRunner
-
-
-# Spustit příkaz a chytit výstup
-try:
-    output = subprocess.check_output(java_command, stderr=subprocess.STDOUT)
-    print("STDOUT:", output.decode("utf-8"))
-except subprocess.CalledProcessError as e:
-    print("Chyba při spuštění příkazu:", e.output.decode("utf-8"))"""
-
-"""# Funkce pro spuštění klienta
-def start_client():
-    client_command = [
-        "C:\\Users\\venca611\\.jdks\\semeru-11.0.20\\bin\\java.exe",
-        "-javaagent:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\lib\\idea_rt.jar=57247:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\bin",
-        "-Dfile.encoding=UTF-8",
-        "-classpath",
-        "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\target\\classes;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\bcel-6.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\codesize-1.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\junit-4.13.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\hamcrest-core-1.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.ui-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\picocontainer-2.14.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.api-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.core-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.host-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.sound-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.battle-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.repository-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\positional-protocol-1.1.0-SNAPSHOT.jar",
-        "cz.vutbr.feec.robocode.battle.StudentServerRunner"
-    ]
-    subprocess.run(client_command)
-
-
-# Funkce pro spuštění serveru s prodlevou
-def start_server_with_delay():
-    time.sleep(5)  # Prodleva 1 sekundy
-    server_command = [
-        "C:\\Users\\venca611\\.jdks\\semeru-11.0.20\\bin\\java.exe",
-        "-javaagent:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\lib\\idea_rt.jar=57369:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\bin",
-        "-Dfile.encoding=UTF-8",
-        "-classpath",
-        "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\target\\classes;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\bcel-6.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\codesize-1.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\junit-4.13.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\hamcrest-core-1.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.ui-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\picocontainer-2.14.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.api-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.core-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.host-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.sound-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.battle-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.repository-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\positional-protocol-1.1.0-SNAPSHOT.jar",
-        "cz.vutbr.feec.robocode.battle.RobocodeRunner"
-    ]
-    subprocess.run(server_command)
-
-
-# Vytvoření vláken pro klienta a server
-client_thread = threading.Thread(target=start_client)
-server_thread = threading.Thread(target=start_server_with_delay)
-
-# Spuštění vláken
-#client_thread.start()
-#server_thread.start()
-
-# Připojte se k vláknům (čekáme na jejich dokončení)
-#client_thread.join()
-#server_thread.join()
-start_client()
-
-exit(0)"""
-
-"""# server
-command = [
-    "C:\\Users\\venca611\\.jdks\\semeru-11.0.20\\bin\\java.exe",
-    "-javaagent:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\lib\\idea_rt.jar=60349:C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.2\\bin",
-    "-Dfile.encoding=UTF-8",
-    "-classpath",
-    "D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\target\\classes;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\bcel-6.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\codesize-1.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\junit-4.13.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\hamcrest-core-1.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.ui-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\picocontainer-2.14.2.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.api-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.core-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.host-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.sound-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.battle-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\robocode.repository-1.9.4.3.jar;D:\\FEKT\\Ing\\diplomka\\RoboCodeProject\\RoboCode\\libraries\\positional-protocol-1.1.0-SNAPSHOT.jar",
-    "cz.vutbr.feec.robocode.battle.RobocodeRunner"
-]
-
-subprocess.run(command)"""
-
-# exit(0)
-
-
-# import os
-
-
-"""path_to_java = "HelloWorld/"
-
-compile_process = subprocess.Popen(["javac", path_to_java + "HelloWorld.java"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-compile_output, compile_errors = compile_process.communicate()
-
-print("compile_output:")
-print(compile_output)
-
-if compile_errors:
-    print("compile_errors:")
-    print(compile_errors)
-
-# get full path
-script_directory = os.path.dirname(os.path.abspath(__file__))
-
-run_process = subprocess.Popen(["java", "-cp", script_directory + "\\HelloWorld", "HelloWorld"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-run_output, run_errors = run_process.communicate()
-
-print("\nrun_output:")
-print(run_output)
-
-if run_errors:
-    print("run_errors:")
-    print(run_errors)"""
-
-# path_to_java = "RoboCode/src/cz/vutbr/feec/robocode/battle/"
-
-"""# Cesta k adresáři, kde se nachází knihovny (JAR soubory)
-libs_path = "D:/FEKT/Ing/diplomka/RoboCode/RoboCode/libraries"
-
-compile_process = subprocess.Popen(["javac", "-cp", libs_path, path_to_java + "RobocodeRunner.java"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-compile_output, compile_errors = compile_process.communicate()
-
-print("compile_output:")
-print(compile_output)
-
-if compile_errors:
-    print("compile_errors:")
-    print(compile_errors)
-
-
-exit(0)
-
-
-
-import os
-import subprocess
-import time
-
-# Získání cesty ke složce, ve které je aktuální skript
-current_dir = os.path.dirname(os.path.abspath(__file__))
-print("aktuální složka:", current_dir)
-
-# Cesta k podadresáři s knihovnami
-library_dir = os.path.join(current_dir, 'RoboCode\\libraries')
-print("cesta ke knihovnám:", library_dir)
-
-# Spuštění Maven kompilace s nastavením cesty k nativním knihovnám
-maven_dir = "RoboCode" """
-
-# Sestavení cest ke zdrojovým souborům Java programů relativně k aktuálnímu adresáři
-"""program_path = 'RoboCode\\src\\cz\\vutbr\\feec\\robocode\\battle'
-java_program1_path = os.path.join(current_dir, program_path + '\\StudentServerRunner.java')
-java_program2_path = os.path.join(current_dir, program_path + '\\RobocodeRunner.java')
-
-print(java_program1_path)
-print(java_program2_path)
-
-# Kompilace prvního Java programu
-s1 = subprocess.Popen("javac A.java", shell=True)
-s2 = subprocess.Popen("java A", shell=True)
-print(s1, s2)"""
-
-"""compile_result_1 = subprocess.run(['javac', '-cp', library_dir, 'StudentServerRunner.java'], cwd=java_program1_path, shell=True)
-#compile_result_1 = subprocess.run(['javac', '-cp', f'{library_dir}/*', java_program1_path], cwd=current_dir, shell=True)
-print(compile_result_1)
-if compile_result_1.returncode != 0:
-    print("Chyba při kompilaci prvního Java programu.")
-    exit(1)
-"""
-# Kompilace druhého Java programu
-"""compile_result_2 = subprocess.run(['javac', '-cp', library_dir2, java_program2_path], cwd=current_dir, shell=True)
-print(compile_result_2)
-if compile_result_2.returncode != 0:
-    print("Chyba při kompilaci druhého Java programu.")
-    exit(1)"""
-
-# time.sleep(0.5)
-
-"""# Spuštění prvního Java programu
-output_file1 = os.path.join(current_dir, 'output1.txt')
-with open(output_file1, 'w') as stdout_file, open(output_file1, 'w') as stderr_file:
-    subprocess.run(['java', '-cp', current_dir, 'cz.vutbr.feec.robocode.battle.StudentServerRunner'], stdout=stdout_file, stderr=stderr_file)
-
-# Spuštění druhého Java programu
-output_file2 = os.path.join(current_dir, 'output2.txt')
-with open(output_file2, 'w') as stdout_file, open(output_file2, 'w') as stderr_file:
-    subprocess.run(['java', '-cp', current_dir, 'cz.vutbr.feec.robocode.battle.RobocodeRunner'], stdout=stdout_file, stderr=stderr_file)
-"""
-
-
-
 
 if __name__ == '__main__':
     # Vlákno pro načítání TensorFlow.
@@ -612,7 +467,17 @@ if __name__ == '__main__':
 
     for episode in range(num_episode):
         print("TODO")
+        RobocodeRunner()
+        # spuštění Robocode a čekání na konec
+        # chycení výstupů stdout a stderr a její analýza
+        # vytvoření/načtení last neuronky (může být několik různých velikostí neuronek)
+        # načtení dat
+        # zpětnovazební učení na datech a neuronce
+        # uložení dat, co chci pro grafy
         print("Epizoda", episode+1, "dokončena, skóre je ...")
+
+
+
 
 
     # zapnuti robocode a počkání na konec
@@ -631,4 +496,4 @@ if __name__ == '__main__':
     | 4 | Bot D | 550 | 600 | 300 | 300 | 2 | 3 |
     +--------+-----------------+--------------+--------------+-------------+------------+------------------+------------------+
     """
-    # sledování cen u agenta, během epizod
+    # sledování cen u agenta, během epizod, ...
