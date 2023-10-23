@@ -120,7 +120,7 @@ class GameSettingsModifier:
     path_to_game_properties: str = "RoboCode/config/game.properties"
     gameWidth: int = 800  # game width: 800  <400; 5000>
     gameHeight: int = 600  # game height: 600 <400; 5000>
-    numberOfRounds: int = 100  # number of rounds: 10 <1; max_int(2_147_483_647)>
+    numberOfRounds: int = 10  # number of rounds: 10 <1; max_int(2_147_483_647)>
     isVisible: bool = True  # Game is visible: True
 
     enemies: dict = {
@@ -155,7 +155,7 @@ class GameSettingsModifier:
     rendering_antialiasing = 0  # 2; 0-2 Default, On, Off
     sound_enableSound = True  # True
     view_robotNames = True  # True
-    battle_desiredTPS = 50  # 50; TPS<0 => max TPS; TPS=0 => error!
+    battle_desiredTPS = -1  # 50; TPS<0 => max TPS; TPS=0 => error!
     sound_enableRobotDeath = True  # True
     view_TPS = True  # True
     sound_enableRobotCollision = True  # True
@@ -392,25 +392,51 @@ class RobocodeRunner:
     ]
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
+    java_program_directory = current_dir + r"\RoboCode"
 
     def __init__(self):
-        print(self.current_dir)
-        java_program_directory = self.current_dir + r"\RoboCode"
-
         # Nastavíme pracovní adresář na adresář s Java programem
-        os.chdir(java_program_directory)
+        os.chdir(self.java_program_directory)
 
         # Spusťte příkaz a uložte výstup a chybový výstup
-        process = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        process = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   universal_newlines=True)
 
         # Získání výstupu a chybového výstupu
         stdout, stderr = process.communicate()
 
         # Výstup a chybový výstup jsou nyní uloženy v proměnných 'stdout' a 'stderr'.
-        print("stdout:")
-        print(stdout)
-        print("stderr:")
-        print(stderr)
+        print("stdout:\n", stdout, "\nstderr:\n", stderr) if DEBUG_PRINT else None
+
+        err_lines = stderr.split('\n')
+        for err_line in err_lines:
+            if not err_line.strip():
+                # Prázdné řádky přeskočíme
+                continue
+            if not err_line.startswith('WARNING: '):
+                print("Chyba v textu:")
+                print(err_line)
+                exit(1)
+
+        # Pokud projde celý text, znamená to, že všechny řádky začínají s "WARNING: "
+        print("Vše v pořádku, pokračujeme.")
+
+        # Najdeme text mezi "-- Battle results --" a koncem textu
+        match = re.search(r'-- Battle results --\s+(.*)', stdout, re.DOTALL)
+
+        if match:
+            results_text = match.group(1)
+
+            # Pomocí regulárního výrazu získáme názvy tanků a jejich skóre
+            tank_results = re.findall(r'(\S+):\s+(\d+)', results_text)
+
+            if tank_results:
+                for tank, score in tank_results:
+                    print(f"{tank.removeprefix('sample.')}: {score}")
+            else:
+                print("Nenalezena žádná data o výsledcích tanků.")
+        else:
+            print("Nenalezena část textu s výsledky.")
 
         os.chdir(self.current_dir)
 
