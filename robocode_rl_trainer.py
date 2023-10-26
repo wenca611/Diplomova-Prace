@@ -419,7 +419,7 @@ class RobocodeRunner:
                 exit(1)
 
         # Pokud projde celý text, znamená to, že všechny řádky začínají s "WARNING: "
-        print("Vše v pořádku, pokračujeme.")
+        print("V stderr vše v pořádku, pokračujeme.")
 
         # Najdeme text mezi "-- Battle results --" a koncem textu
         match = re.search(r'-- Battle results --\s+(.*)', stdout, re.DOTALL)

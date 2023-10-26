@@ -28,6 +28,11 @@ import robocode._RobotBase;
 
 import static java.lang.Math.abs;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
 public class PyRobotClient extends AdvancedRobot {
 
 	public static int counter = 1;
@@ -82,11 +87,52 @@ public class PyRobotClient extends AdvancedRobot {
 		Color radarColor = Color.decode(prop.getProperty("robot." + id + ".color.radar"));
 		setColors(bodyColor, gunColor, radarColor);
 
+		// Spusťte Python s argumentem, ve kterém bude port pro localhost
+		Process process = null;
+		try {
+			process = Runtime.getRuntime().exec("python python_server.py 8080");
+		} catch (IOException e) {
+			System.out.println("Python se nespuštěl úspěšně.");
+			throw new RuntimeException(e);
+		}
+
+		// Zkontrolujte, zda se Python spustil úspěšně
+		/*int exitCode = 0;
+		try {
+			exitCode = process.waitFor();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		if (exitCode != 0) {
+			// Python se nespuštěl úspěšně
+			System.out.println("Python se nespuštěl úspěšně.");
+			System.exit(1);
+		}*/
+
+
+		// Vytvořte socket pro připojení k Pythonu
+		Socket socket = null;
+		try {
+			socket = new Socket("localhost", 8080);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		// Vytvořte vstupní a výstupní streamy pro komunikaci se socketem
+		InputStream inputStream = null;
+		OutputStream outputStream = null;
+		try {
+			inputStream = socket.getInputStream();
+			outputStream = socket.getOutputStream();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 		// Loop forever
 		for (; ; ) {
 			try {
 				//updateActionsFromRobotServer();
-				updateActionsWithJava();
+				updateActionsWithJava(inputStream, outputStream);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -126,7 +172,7 @@ public class PyRobotClient extends AdvancedRobot {
 		}
 	}
 
-	private void updateActionsWithJava() throws IOException {
+	private void updateActionsWithJava(InputStream inputStream, OutputStream outputStream) throws IOException {
 		// Získání informací o bitevním poli
 		ProcessedBattleData processedBattleData = new ProcessedBattleData(getListOfProcessedBullets(), getListOfProcessedTanks());
 
@@ -143,6 +189,8 @@ public class PyRobotClient extends AdvancedRobot {
 		// other tanks [[_ _ _ _ _ _ _ _], ...] = tanks - my tank
 		// bullets [[_ _ _ _], ...]
 
+		/*
+		Q-table
 		int state = myTank.getEnergy() < 10.0f ? 0 : (int) (myTank.getEnergy() / 10.0f) - 1;
 
 		// Vytvoření Q-tabulky 10x4
@@ -157,7 +205,20 @@ public class PyRobotClient extends AdvancedRobot {
 				{1., 1., 1., 1.}, // 7
 				{1., 1., 1., 1.}, // 8
 				{1., 1., 1., 1.}, // 9
-		};
+		};*/
+
+		// Vygenerujte náhodné číslo
+		int number = (int) (Math.random() * 100);
+
+		// Odešlete číslo do Pythonu
+		outputStream.write(number);
+		outputStream.flush();
+
+		// Čekejte na odpověď z Pythonu
+		int response = inputStream.read();
+
+		// Zpracujte odpověď z Pythonu
+		System.out.println(response);
 
 
 		// Output from Tank
@@ -165,14 +226,14 @@ public class PyRobotClient extends AdvancedRobot {
 		// Tank turn INT 30° <>
 		// Shot power INT 2 <>
 		// Gun turn 45° <>
-		//int simulatedTankMove = 0; // Nastavte požadovaný pohyb tanku
-		//int simulatedTankTurn = 1; // Nastavte požadovaný úhel otáčení tanku
-		//int simulatedShotPower = 2; // Nastavte požadovanou sílu střely
-		//int simulatedGunTurn = -30; // Nastavte požadovaný úhel otáčení věže
-		int simulatedTankMove = (int) qTable[state][0];
-		int simulatedTankTurn = (int) qTable[state][1];
-		int simulatedShotPower = (int) qTable[state][2];
-		int simulatedGunTurn = (int) qTable[state][3];
+		int simulatedTankMove = 0; // Nastavte požadovaný pohyb tanku
+		int simulatedTankTurn = 1; // Nastavte požadovaný úhel otáčení tanku
+		int simulatedShotPower = 2; // Nastavte požadovanou sílu střely
+		int simulatedGunTurn = -30; // Nastavte požadovaný úhel otáčení věže
+		//int simulatedTankMove = (int) qTable[state][0];
+		//int simulatedTankTurn = (int) qTable[state][1];
+		//int simulatedShotPower = (int) qTable[state][2];
+		//int simulatedGunTurn = (int) qTable[state][3];
 
 		// Uložení stavů a akcí do souboru
 		/*try (FileWriter writer = new FileWriter("data.txt", true)) {
