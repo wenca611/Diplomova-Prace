@@ -53,11 +53,11 @@ except Exception as e:
     exit(1)
 
 
-def load_tensorflow() -> types.ModuleType:
+def load_tensorflow() -> None:
+    global tf  # Použijte globální proměnnou "tf"
     try:
         import tensorflow as tf
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-        return tf
     except ImportError as load_err:
         print("Chyba v načtení knihovny třetích stran: {0}".format(load_err))
         exit(1)
@@ -68,6 +68,9 @@ def load_tensorflow() -> types.ModuleType:
 
 # DEBUG option
 DEBUG_PRINT = False
+
+# Globální proměnná pro uchování knihovny TensorFlow
+tf = None
 
 
 class Utils:
@@ -116,11 +119,14 @@ a pro ukončení programu použijte: 'k', 'e', 'x' nebo '.'\n""")
 
 
 class GameSettingsModifier:
+    """
+    TODO
+    """
     # parameters for game.properties
     path_to_game_properties: str = "RoboCode/config/game.properties"
     gameWidth: int = 800  # game width: 800  <400; 5000>
-    gameHeight: int = 600  # game height: 600 <400; 5000>
-    numberOfRounds: int = 10  # number of rounds: 10 <1; max_int(2_147_483_647)>
+    gameHeight: int = 600  # game height: 600  <400; 5000>
+    numberOfRounds: int = 10  # number of rounds: 10  <1; max_int(2_147_483_647)>
     isVisible: bool = True  # Game is visible: True
 
     enemies: dict = {
@@ -144,8 +150,10 @@ class GameSettingsModifier:
         17: "PyRobotClient"
     }
 
-    listOfEnemies: str = "Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
-    # listOfEnemies: str = "1, "*999 + "1"  # 1000 tanks ≈ 3 FPS and 3 TPS
+    # listOfEnemies: str = "1, Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
+    #listOfEnemies: str = "2, "*9 + "17"  # 1000 tanks ≈ 3 FPS and 3 TPS
+    # listOfEnemies: str = ", ".join([str(i+1) for i in range(len(enemies)-1)])
+    listOfEnemies: str = "1, 17, 3, 12, 11, 2"
 
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
@@ -155,7 +163,7 @@ class GameSettingsModifier:
     rendering_antialiasing = 0  # 2; 0-2 Default, On, Off
     sound_enableSound = True  # True
     view_robotNames = True  # True
-    battle_desiredTPS = -1  # 50; TPS<0 => max TPS; TPS=0 => error!
+    battle_desiredTPS = 50  # 50; TPS<0 => max TPS; TPS=0 => error!
     sound_enableRobotDeath = True  # True
     view_TPS = True  # True
     sound_enableRobotCollision = True  # True
@@ -440,31 +448,6 @@ class RobocodeRunner:
 
         os.chdir(self.current_dir)
 
-
-"""
-layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
-
-def create_model():
-    global layer_sizes
-    if len(layer_sizes) < 3:
-        del layer_sizes
-        layer_sizes = [1024, 4]
-
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Input(shape=(layer_sizes[0],)))
-
-    for size in layer_sizes[1:-1]:
-        model.add(tf.keras.layers.Dense(size, activation='relu'))
-
-    # Výstupní vrstva s lineární aktivační funkcí a počet výstupů dle poslední hodnoty v seznamu
-    model.add(tf.keras.layers.Dense(layer_sizes[-1], activation='linear'))
-
-    return model
-
-create_model()
-
-"""
-
 if __name__ == '__main__':
     # Vlákno pro načítání TensorFlow.
     tensorflow_thread = threading.Thread(target=load_tensorflow)
@@ -491,22 +474,106 @@ if __name__ == '__main__':
     tensorflow_thread.join()
     print("Načten Tensorflow") if DEBUG_PRINT else None
 
+    if tf is None:
+        print("Knihovna TensorFlow není načtena. Program bude ukončen.")
+        exit(1)  # Importujte modul sys na začátku kódu
+
+    # TODO do funkce
+    import tf2onnx
+    import onnx
+
+    # Cesta k složce s modely
+    models_folder = 'RoboCode/NeuralNetworkModels/'
+
+    # Kontrola, zda existuje složka NeuralNetworkModels
+    if not os.path.exists(models_folder):
+        # Vytvoření složky, pokud neexistuje
+        os.makedirs(models_folder)
+        print(f"Složka '{models_folder}' byla vytvořena.")
+
+    # Vytvoření nebo načtení TensorFlow modelu
+    if os.path.exists(models_folder + 'my_model.keras'):
+        # Načtení existujícího modelu
+        model_tf = tf.keras.models.load_model(models_folder + 'my_model.keras')
+        print("Existující TensorFlow model byl načten.")
+    else:
+        # Vytvoření a trénink nového modelu
+        model_tf = tf.keras.Sequential([
+            tf.keras.layers.Dense(2, activation='relu', input_shape=(160,)),
+            tf.keras.layers.Dense(2, activation='relu'),
+            tf.keras.layers.Dense(4, activation='linear')
+        ])
+
+        # Uložení modelu ve formátu Keras
+        model_tf.save(models_folder + 'my_model.keras')
+        print(f"Nový TensorFlow model byl vytvořen a uložen v '{models_folder}my_model.keras'.")
+
+    # Kompilace modelu (definujte optimizér, ztrátovou funkci a metriky)
+    model_tf.compile(optimizer='adam', loss='hinge')
+
+    # Převod modelu do formátu ONNX
+    onnx_model_path = models_folder + 'my_model.onnx'
+    #input_signature = [tf.TensorSpec([None, 160], tf.float32, name='x')]
+    input_signature = [tf.TensorSpec([1, 160], tf.float32, name='input_name')]
+    onnx_model, _ = tf2onnx.convert.from_keras(model_tf, input_signature)
+    onnx.save_model(onnx_model, onnx_model_path)
+    print(f"Model byl převeden do formátu ONNX a uložen v '{onnx_model_path}'.")
+
     for episode in range(num_episode):
         print("TODO")
         RobocodeRunner()
         # spuštění Robocode a čekání na konec
         # chycení výstupů stdout a stderr a její analýza
-        # vytvoření/načtení last neuronky (může být několik různých velikostí neuronek)
         # načtení dat
         # zpětnovazební učení na datech a neuronce
         # uložení dat, co chci pro grafy
-        print("Epizoda", episode+1, "dokončena, skóre je ...")
+        print("Epizoda", episode+1, "dokončena")
+
+        # load game_data -> input stavy, target akce a sample_weight=rewards ceny
+
+        # Zpětná vazba (předpokládáme, že máme vstupy a cílové hodnoty pro zpětnou vazbu)
+        #model_tf.fit(input_data, target_data, epochs=10)
+
+
+        # Uložení TF a ONNX modelu do souboru
+        model_tf.save(models_folder + 'my_model.keras')
+        print("uložení TF modelu")
+        onnx_model, _ = tf2onnx.convert.from_keras(model_tf, input_signature)
+        onnx.save_model(onnx_model, onnx_model_path)
+        print(f"Model byl převeden do formátu ONNX a uložen v '{onnx_model_path}'.")
 
 
 
 
 
-    # zapnuti robocode a počkání na konec
+    """
+    layer_sizes: list[int] = [1024, 4]  # [1024, 2**11, 2**11, 4]
+
+    def create_model():
+        global layer_sizes
+        if len(layer_sizes) < 3:
+            del layer_sizes
+            layer_sizes = [1024, 4]
+
+        model = tf.keras.Sequential()
+        model.add(tf.keras.layers.Input(shape=(layer_sizes[0],)))
+
+        for size in layer_sizes[1:-1]:
+            model.add(tf.keras.layers.Dense(size, activation='relu'))
+
+        # Výstupní vrstva s lineární aktivační funkcí a počet výstupů dle poslední hodnoty v seznamu
+        model.add(tf.keras.layers.Dense(layer_sizes[-1], activation='linear'))
+
+        return model
+
+    create_model()
+
+    """
+
+
+
+
+    # TODO
     # načtení dat, načtení neuronky a zpěně gradient a uložení neuronky
     # konec epizod
     # uložení dat pro grafy, jako ceny
@@ -523,3 +590,5 @@ if __name__ == '__main__':
     +--------+-----------------+--------------+--------------+-------------+------------+------------------+------------------+
     """
     # sledování cen u agenta, během epizod, ...
+    # neuronky s časovou značkou
+    # tabulka přezdívek neuronek + neuronka čas. name + čas trénování + počet epizod + velikost a typy neuronů

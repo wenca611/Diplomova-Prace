@@ -122,6 +122,7 @@ public class RobocodeRunner {
 		BattleSpecification battleSpec = new BattleSpecification(numberOfRounds, battlefield, selectedRobots); // 10
 		// Run our specified battle and let it run till it's over
 
+		// batle start
 		engine.runBattle(battleSpec, true/* wait till the battle is over */);
 
 		/*for (BattleResults result : battleListener.getResults()) {

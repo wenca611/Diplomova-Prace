@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Server" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="ibm-11" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="Server" />
+    <module name="RobocodePlatform" />
+    <option name="WORKING_DIRECTORY" value="$USER_HOME$/Desktop/Programming/AAA_Python/JavaToPython" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
