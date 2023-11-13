@@ -71,26 +71,30 @@ except ConnectionRefusedError:
     print("Nepodařilo se připojit k localhostu na portu", port)
     exit(1)
 
+
+bad_data_counter = 0
 while True:
     # Nastavíme socket na neblokující režim a nastavíme timeout na 1 sekundu
-    s.settimeout(0.6)
+    s.settimeout(0.5)
 
     #------------------------získané STAVY do Neuronové sítě------------------------------------#
     try:
-        received_data = s.recv(4096)  # Pokusíme se přijmout data ze socketu, 160n asi 1000+B
+        received_data = s.recv(8000)  # Pokusíme se přijmout data ze socketu, 160n asi 1000+B
         if not received_data:
             # Data nebyla obdržena
-            s.close()
-            logging.error("no data")
-            continue
+            if bad_data_counter == 200:
+                s.close()
+                break
+            else:
+                bad_data_counter += 1
+                continue
     except socket.timeout:
         # Uplynulo 0.6 sekundy a data nebyla obdržena
         # logging.error("vypršel čas")  # good on end
         s.close()
         break
 
-    # logging.error(received_data)
-
+    #logging.error(received_data[:100])
 
     # Dekódování bajtů na řetězec a odstranění \r\n na konci
     decoded_data = received_data.decode('utf-8').strip()
@@ -99,16 +103,15 @@ while True:
     float_array = np.array([[float(num) for num in decoded_data.split()]], dtype=np.float32)
 
     # Výsledek
-    # logging.error("float data: " + str(float_array))
+    #logging.error("float data: " + str(float_array))
     # logging.error("délka: "+str(float_array.shape[1]))
-
-
     # Převedení vstupních dat do formátu, který akceptuje ONNX model
     #input_data = float_array.reshape(1, -1)
     # input_data = generate_random_input(batch_size=1, input_size=160)
     #logging.error("rand input:" + str(input_data))
 
     output_data = None
+
     try:
         # Inference (získání výstupu) z ONNX modelu
         output_data = onnx_session.run(None, {'input_name': float_array})
@@ -116,10 +119,13 @@ while True:
         # Logování chyby
         logging.error("Chyba při inference ONNX modelu: %s", str(e))
 
+    formatted_data = np.array2string(np.squeeze(output_data), precision=6)
+    formatted_data = formatted_data.strip("[]")
+    logging.error("akce:" + str(formatted_data))
+
     if output_data:
-        action = output_data[0][0]
         # Pošlete ... do Javy s končícím znakem "\n"
-        s.sendall((str(action) + "\n").encode())
+        s.sendall((formatted_data + "\n").encode())
 
 # Uzavřeme socket
 s.close()

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import cz.vutbr.feec.robocode.battle.BattleObserver;
 import cz.vutbr.feec.robocode.data.ProcessedBattleData;
 import cz.vutbr.feec.robocode.data.ProcessedBulletData;
 import cz.vutbr.feec.robocode.data.ProcessedTankData;
@@ -25,6 +26,7 @@ import robocode.BattleRules;
 import robocode.RoundEndedEvent;
 import robocode.StatusEvent;
 import robocode._RobotBase;
+import robocode.BattleResults;
 
 import static java.lang.Math.abs;
 
@@ -63,6 +65,8 @@ public class PyRobotClient extends AdvancedRobot {
 	private BattleRules battleRules;
 	private TCPClientSocket tcpClientSocket;
 	private boolean isFirstCall = true; // Definice členské proměnné
+
+	private static final String FILE_NAME = "ModelGameData.txt";
 
 	public Color bodyColor = Color.decode("#003387");//Color.decode("#008733");
 	public Color gunColor = Color.decode("#22EE22");//Color.decode("#FF0000");
@@ -105,7 +109,7 @@ public class PyRobotClient extends AdvancedRobot {
 
 		try {
 			ServerSocket serverSocket = new ServerSocket(freePort);
-			serverSocket.setSoTimeout(2500);
+			serverSocket.setSoTimeout(3500);
 
 			String pythonPath = "src/cz/vutbr/feec/robocode/studentRobot/";
 			String pythonScript = "NeuralTank.py";
@@ -117,23 +121,29 @@ public class PyRobotClient extends AdvancedRobot {
 
 			Process process = processBuilder.start();
 
-			/*try {
-				// Počkej 3 sekundy
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}*/
-
 			Socket clientSocket = serverSocket.accept();
 
-			serverSocket.setSoTimeout(500);
+			serverSocket.setSoTimeout(1000);
+
+			Logger.logMessage("TCP/IP jede");
+
+			// Kontrola existence souboru
+			File file = new File(FILE_NAME);
+
+			if (file.exists()) {
+				// Soubor existuje, vymaž jeho obsah
+				clearFileContent(file);
+			} else {
+				// Soubor neexistuje, vytvoř ho
+				createFile(file);
+			}
 
 			// Loop forever
 			//noinspection InfiniteLoopStatement
 			while (true) {
 				try {
 					//updateActionsFromRobotServer();
-					updateActionsWithPython(clientSocket);
+					updateActionsWithPython(clientSocket, file);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -177,7 +187,7 @@ public class PyRobotClient extends AdvancedRobot {
 		}
 	}
 
-	private void updateActionsWithPython(Socket clientSocket) throws IOException {
+	private void updateActionsWithPython(Socket clientSocket, File file) throws IOException {
 		// Získání informací o bitevním poli
 		ProcessedBattleData processedBattleData = new ProcessedBattleData(getListOfProcessedBullets(), getListOfProcessedTanks());
 
@@ -310,7 +320,8 @@ public class PyRobotClient extends AdvancedRobot {
 		String receivedActionStr = in.readLine();
 
 		// Oddělení hodnot pomocí mezer
-		String[] actionValues = receivedActionStr.replaceAll("[\\[\\]]", "").split("\\s+");
+		String actionValuesStr = receivedActionStr.replaceAll("\\s+", " ");
+		String[] actionValues = actionValuesStr.split("\\s+");
 
 		// Kontrola, zda bylo získáno správné množství hodnot
 		if (actionValues.length == 4) {
@@ -319,10 +330,10 @@ public class PyRobotClient extends AdvancedRobot {
 			// Tank turn  30° <>
 			// Shot power  2 <>
 			// Gun turn 45° <>
-			double simulatedTankMove = Double.parseDouble(actionValues[0]);
-			double simulatedTankTurn = Double.parseDouble(actionValues[1]);
-			double simulatedShotPower = Double.parseDouble(actionValues[2]);
-			double simulatedGunTurn = Double.parseDouble(actionValues[3]);
+			double simulatedTankMove = parseDoubleWithDefault(actionValues[0], 0.0);
+			double simulatedTankTurn = parseDoubleWithDefault(actionValues[1], 0.0);
+			double simulatedShotPower = parseDoubleWithDefault(actionValues[2], 0.0);
+			double simulatedGunTurn = parseDoubleWithDefault(actionValues[3], 0.0);
 
 			moveAmount = simulatedTankMove;
 			tankTurn = simulatedTankTurn;
@@ -330,25 +341,14 @@ public class PyRobotClient extends AdvancedRobot {
 			gunTurn = simulatedGunTurn;
 
 		} else {
-			// Chyba ve formátu vstupního řetězce
-			//.err.println("Chybný formát vstupního řetězce: " + receivedActionStr);
-			// na konci už nic
+			return;
 		}
 
+		// Spojení stavu a akce
+		String combinedData = networkStates + "|" + actionValuesStr;
 
-		// Uložení stavů a akcí do souboru
-		/*try (FileWriter writer = new FileWriter("data.txt", true)) {
-			writer.write(myTank+"+"); // muj tank
-			writer.write(processedBattleData.getListOfProcessedTanks()+"+"); // ostatni tanky
-			writer.write(processedBattleData.getListOfProcessedBullets()+"+"); // strely
-			writer.write(Arrays.toString(qTable[state])+"\n");
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-
-		// Nastavení akcí na základě simulovaných dat
-
+		// Uložení do souboru
+		saveToFile(file, combinedData);
 	}
 
 	private void updateActionsFromRobotServer() throws IOException {
@@ -461,5 +461,49 @@ public class PyRobotClient extends AdvancedRobot {
 		int green = (int) (Math.random() * 256);
 		int blue = (int) (Math.random() * 256);
 		return new Color(red, green, blue);
+	}
+
+	private static void clearFileContent(File file) {
+		try (PrintWriter writer = new PrintWriter(file)) {
+			// Vymaž obsah souboru
+			writer.print("");
+			System.out.println("Obsah souboru byl vymazán.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void createFile(File file) {
+		try {
+			// Vytvoř soubor
+			if (file.createNewFile()) {
+				System.out.println("Soubor vytvořen: " + file.getName());
+			} else {
+				System.out.println("Soubor již existuje.");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void saveToFile(File file, String data) {
+		try (FileWriter writer = new FileWriter(file, true);
+			 BufferedWriter bufferedWriter = new BufferedWriter(writer);
+			 PrintWriter printWriter = new PrintWriter(bufferedWriter)) {
+			// Uložení dat na poslední řádek
+			printWriter.println(data);
+			System.out.println("Data byla uložena do souboru.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	// Metoda pro převod na Double s výchozí hodnotou pro případ NaN
+	private static double parseDoubleWithDefault(String value, double defaultValue) {
+		try {
+			return Double.parseDouble(value);
+		} catch (NumberFormatException | NullPointerException e) {
+			return defaultValue;
+		}
 	}
 }
