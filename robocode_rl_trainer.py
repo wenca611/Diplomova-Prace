@@ -57,6 +57,11 @@ except Exception as e:
 
 
 def load_tensorflow() -> None:
+    """
+    Načte TensorFlow a nastaví prostředí pro minimalizaci logování.
+
+    :return: None
+    """
     global tf  # Použijte globální proměnnou "tf"
     try:
         import tensorflow as tf
@@ -123,13 +128,16 @@ a pro ukončení programu použijte: 'k', 'e', 'x' nebo '.'\n""")
 
 class GameSettingsModifier:
     """
-    TODO
+    GameSettingsModifier class is designed to modify the settings for the Robocode game. It provides a set of parameters
+    and functions to customize various aspects of the game, such as game properties, opponent selection, and rendering
+    preferences. The class initializes with default settings, and its methods allow users to update and print the
+    modified configurations.
     """
     # parameters for game.properties
     path_to_game_properties: str = "RoboCode/config/game.properties"
     gameWidth: int = 800  # game width: 800  <400; 5000>
     gameHeight: int = 600  # game height: 600  <400; 5000>
-    numberOfRounds: int = 1  # number of rounds: 10  <1; max_int(2_147_483_647)>
+    numberOfRounds: int = 10  # number of rounds: 10  <1; max_int(2_147_483_647)>
     isVisible: bool = True  # Game is visible: True
 
     enemies: dict = {
@@ -150,30 +158,39 @@ class GameSettingsModifier:
         14: "TrackFire",
         15: "VelociRobot",
         16: "Walls",
-        17: "PyRobotClient"
+        17: "PyRobotClient"  #RobotTrainAI PyRobotClient
     }
 
     # listOfEnemies: str = "1, Crazy, 13, Walls, 17"  # opponents list: Crazy, 13, Walls, 17
-    #listOfEnemies: str = "2, "*9 + "17"  # 1000 tanks ≈ 3 FPS and 3 TPS
-    # listOfEnemies: str = ", ".join([str(i+1) for i in range(len(enemies)-1)])
-    listOfEnemies: str = "1, 17, 3, 12, 11, 2"
+    # listOfEnemies: str = "12, "*9 + "17"  # 1000 tanks ≈ 3 FPS and 3 TPS
+    # listOfEnemies: str = ", ".join([str(i+1) for i in range(len(enemies)-1)]) # all tanks
+    #listOfEnemies: str = "16, 11, 13, 14, 2"  # <-- training from 11
+    listOfEnemies: str = "16, 17, 13, 14, 2"  # --> testing from 17
+
+    #listOfEnemies: str = ("Crazy, Fire, MyFirstJuniorRobot, PaintingRobot, RamFire, 17, Tracker, TrackFire,"
+    #                      " VelociRobot, Walls")
+    # all bots: Corners, Crazy, Fire, Interactive, Interactive_v2, MyFirstJuniorRobot, MyFirstRobot, PaintingRobot,
+    # RamFire, SittingDuck, SpinBot, Target, Tracker, TrackFire, VelociRobot, Walls
+    # top 10 bots: Crazy, Fire, MyFirstJuniorRobot, PaintingRobot, RamFire, SpinBot, Tracker, TrackFire,
+    # VelociRobot, Walls
+    # top 5 bots: 1. Walls, 2. SpinBot, 3. Tracker, 4. TrackFire, 5. Crazy
 
     # parameters for robocode.properties
     path_to_robocode_properties: str = "RoboCode/config/robocode.properties"
     view_ground = True  # True
     rendering_method = 1  # 2; 0-2 Default, Quality, Speed
-    view_FPS = False  # True
+    view_FPS = True  # True
     rendering_antialiasing = 1  # 2; 0-2 Default, On, Off
     sound_enableSound = False  # True
     view_robotNames = True  # True
-    battle_desiredTPS = 50  # 50; TPS<0 => max TPS; TPS=0 => error!
+    battle_desiredTPS = -1  # 50; TPS<0 => max TPS; TPS=0 => error!
     sound_enableRobotDeath = False  # True
     view_TPS = True  # True
     sound_enableRobotCollision = False  # True
     rendering_forceBulletColor = True  # True
     rendering_noBuffers = 3  # 0; 0-3 [max ~40] Without buffer, Single, Double, Triple
     view_explosions = True  # True
-    rendering_text_antialiasing = 2 # 2; 0-2 Default, On, Off
+    rendering_text_antialiasing = 2  # 2; 0-2 Default, On, Off
     rendering_bufferImages = True  # True
     view_explosionDebris = True  # True
     sound_enableBulletHit = False  # True
@@ -206,8 +223,11 @@ class GameSettingsModifier:
 
     @staticmethod
     def read_file(filename):
+        """
+        TODO
+        """
         try:
-            with open(filename, 'r') as file:
+            with open(filename) as file:  # default is 'r'
                 content = file.read()
             return content
         except FileNotFoundError:
@@ -219,6 +239,9 @@ class GameSettingsModifier:
 
     @staticmethod
     def write_file(filename, content):
+        """
+        TODO
+        """
         try:
             with open(filename, 'w') as file:
                 file.write(content)
@@ -228,7 +251,10 @@ class GameSettingsModifier:
             exit(1)
 
     @staticmethod
-    def update_content(var, var_type, content):
+    def update_content(var: object, var_type: object, content: object) -> object:
+        """
+        TODO
+        """
         var_text, var_value = var
         # odstran prefix
         var_text: str = var_text.removeprefix("self.")
@@ -271,6 +297,13 @@ class GameSettingsModifier:
         return content
 
     def set_game_properties(self):
+        """
+        TODO
+        GameSettingsModifier class is designed to modify the settings for the Robocode game. It provides a set of parameters
+        and functions to customize various aspects of the game, such as game properties, opponent selection, and rendering
+        preferences. The class initializes with default settings, and its methods allow users to update and print the
+        modified configurations.
+        """
         content = self.read_file(self.path_to_game_properties)
         print("Game properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
@@ -285,6 +318,9 @@ class GameSettingsModifier:
         self.write_file(self.path_to_game_properties, content)
 
     def set_robocode_properties(self):
+        """
+        TODO
+        """
         content = self.read_file(self.path_to_robocode_properties)
         print("Robocode properties[:500]:", content[:500]) if DEBUG_PRINT else None
 
@@ -320,6 +356,9 @@ class GameSettingsModifier:
         self.write_file(self.path_to_robocode_properties, content)
 
     def set_window_properties(self):
+        """
+        TODO
+        """
         content = self.read_file(self.path_to_window_properties)
         print("Window properties[:300]:", content[:300]) if DEBUG_PRINT else None
 
@@ -336,7 +375,7 @@ class UserInterface:
     """
 
     @staticmethod
-    def input_loop(text: str):
+    def input_loop(text: str) -> int:
         """
         Loops until valid user input is entered.
 
@@ -349,7 +388,7 @@ class UserInterface:
             user_input: str = input(text + " (1, 100, 2.3e6, help, end): ")
             low_user_input: str = user_input.lower()
             try:
-                num = float(low_user_input)
+                num: float = float(low_user_input)
                 if num > 0. and num.is_integer():
                     return int(num)
                 else:
@@ -405,6 +444,8 @@ class RobocodeRunner:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     java_program_directory = current_dir + r"\RoboCode"
 
+    moje_score = 0
+
     def __init__(self):
         # Nastavíme pracovní adresář na adresář s Java programem
         os.chdir(self.java_program_directory)
@@ -430,29 +471,52 @@ class RobocodeRunner:
                 exit(1)
 
         # Pokud projde celý text, znamená to, že všechny řádky začínají s "WARNING: "
-        print("V stderr vše v pořádku, pokračujeme.")
+        print("V stderr vše v pořádku, pokračujeme.") if DEBUG_PRINT else None
 
         # Najdeme text mezi "-- Battle results --" a koncem textu
         match = re.search(r'-- Battle results --\s+(.*)', stdout, re.DOTALL)
 
+        score_sum: int = 0
+
         if match:
-            results_text = match.group(1)
+            results_text: str = match.group(1)
 
             # Pomocí regulárního výrazu získáme názvy tanků a jejich skóre
-            tank_results = re.findall(r'(\S+):\s+(\d+)', results_text)
-
+            tank_results: list[str] = re.findall(r"(\w+(?:\.\w+)?(?:\s\(?\w+\)?)?)\s*:\s+(\d+)", results_text)[:-1]
+            print("Výsledky tanků:", tank_results, results_text) if DEBUG_PRINT else None
             if tank_results:
                 for tank, score in tank_results:
-                    print(f"{tank.removeprefix('sample.')}: {score}")
+                    tank = tank.removeprefix('sample.')
+                    if tank == 'RobotTrainAI':
+                        self.moje_score: int = int(score)
+                    score_sum: int = int(score)
+                    print(f"{tank}: {score}")
             else:
                 print("Nenalezena žádná data o výsledcích tanků.")
+
+            avg_opponent_score = score_sum / len(tank_results) if len(tank_results) > 0 else 0
+
+            self.moje_score += (self.moje_score-avg_opponent_score)*0.1
         else:
             print("Nenalezena část textu s výsledky.")
 
         os.chdir(self.current_dir)
 
+    def start(self):
+        """
+        TODO
+        """
+        return self.moje_score
+
+
 class NaNCallback(Callback):
+    """
+    TODO
+    """
     def on_epoch_end(self, epoch, logs=None):
+        """
+        TODO
+        """
         values = np.array(list(logs.values()))
         if np.isnan(values).any():
             self.model.stop_training = True
@@ -461,6 +525,9 @@ class NaNCallback(Callback):
 
 # Předpokládejme, že můžeme použít funkci predict pro predikci Q-hodnot
 def predict_q_values(model, state):
+    """
+    TODO
+    """
     return model.predict(np.array([state]))
 
 
@@ -477,9 +544,10 @@ def calculate_target_q_values(model, gamma, states):
 
     return target_q_values
 
+
 if __name__ == '__main__':
     # Vlákno pro načítání TensorFlow.
-    tensorflow_thread = threading.Thread(target=load_tensorflow)
+    tensorflow_thread: threading.Thread = threading.Thread(target=load_tensorflow)
     tensorflow_thread.start()
 
     # Sets up a keyboard interrupt signal handler.
@@ -490,8 +558,9 @@ if __name__ == '__main__':
 
     # nastavení konfigurace hry, platformy a obrazovky
     GameSettingsModifier.isVisible = True
+    GameSettingsModifier.numberOfRounds = 10
 
-    game_settings = GameSettingsModifier()
+    game_settings: GameSettingsModifier = GameSettingsModifier()
     print("Nastavení předdefinovaných vlastností:")
     game_settings.set_game_properties()
     game_settings.set_robocode_properties()
@@ -514,7 +583,7 @@ if __name__ == '__main__':
     import onnx
 
     # Cesta k složce s modely
-    models_folder = 'RoboCode/NeuralNetworkModels/'
+    models_folder: str = 'RoboCode/NNModels/'
 
     # Kontrola, zda existuje složka NeuralNetworkModels
     if not os.path.exists(models_folder):
@@ -540,40 +609,54 @@ if __name__ == '__main__':
             tf.keras.layers.Dense(int(2 ** 10), activation='relu', kernel_initializer='random_normal'),
             tf.keras.layers.Dense(4, activation='linear', kernel_initializer='random_normal')
         ])
+        # noinspection PyUnresolvedReferences
+        """model_tf = tf.keras.Sequential([
+            tf.keras.layers.Dense(int(2 ** 10), activation='sigmoid', input_shape=(160,),
+                                  kernel_initializer='random_normal'),
+            tf.keras.layers.Dense(int(2 ** 10), activation='sigmoid', kernel_initializer='random_normal'),
+            tf.keras.layers.Dense(int(2 ** 10), activation='sigmoid', kernel_initializer='random_normal'),
+            tf.keras.layers.Dense(int(2 ** 10), activation='sigmoid', kernel_initializer='random_normal'),
+            tf.keras.layers.Dense(4, activation='linear', kernel_initializer='random_normal')
+        ])"""
 
         # Uložení modelu ve formátu Keras
         model_tf.save(models_folder + 'my_model.keras')
         print(f"Nový TensorFlow model byl vytvořen a uložen v '{models_folder}my_model.keras'.")
 
     # Kompilace modelu (definujte optimizér, ztrátovou funkci a metriky)
-    model_tf.compile(optimizer='adam', loss='mean_squared_error')
+    # MSE:
+    # model_tf.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+    # MAE:
+    model_tf.compile(optimizer='adam', loss='mean_absolute_error', metrics=['accuracy'])
 
     # Převod modelu do formátu ONNX
-    onnx_model_path = models_folder + 'my_model.onnx'
-    #input_signature = [tf.TensorSpec([None, 160], tf.float32, name='x')]
+    onnx_model_path: str = models_folder + 'my_model.onnx'
+
     # noinspection PyUnresolvedReferences
-    input_signature = [tf.TensorSpec([1, 160], tf.float32, name='input_name')]
+    input_signature: list = [tf.TensorSpec([1, 160], tf.float32, name='input_name')]
     onnx_model, _ = tf2onnx.convert.from_keras(model_tf, input_signature)
     onnx.save_model(onnx_model, onnx_model_path)
     print(f"Model byl převeden do formátu ONNX a uložen v '{onnx_model_path}'.")
 
-    start_time = time.time()
+    start_time: float = time.time()
     for episode in range(num_episode):
-        start_ep_time = time.time()
-        print("TODO return")
-        RobocodeRunner()
+        start_ep_time: float = time.time()
+        runner: RobocodeRunner = RobocodeRunner()
+        my_reward: int = runner.start()
 
-        lines = []
+        lines: list = []
 
         # load game_data -> input stavy, target akce a sample_weight=rewards ceny
         try:
             with open("RoboCode/ModelGameData.txt", "r") as file:
                 # Načtení obsahu souboru do pole řádků
-                lines = file.readlines()
+                lines: list[str] = file.readlines()
 
                 # Kontrola, zda soubor není prázdný
                 if not lines:
-                    raise ValueError("Soubor je prázdný.")
+                    print("prázdný soubor pro učení")
+                    continue  # skip učení neuronky, podruhé už to může fungovat
+                    # raise ValueError("Soubor je prázdný.")
 
                 # Zde můžete dále pracovat s obsahem souboru, například vypsání obsahu
                 """print("Obsah souboru:")
@@ -591,21 +674,21 @@ if __name__ == '__main__':
             exit(1)
 
         # Inicializace seznamů pro stavy a akce
-        stavy = []
-        akce = []
+        stavy: list = []
+        akce: list = []
 
         # Procházení každého stringu v poli
         for line in lines:
             # Rozdělení stringu podle znaku '|'
-            parts = line.strip().split('|')
+            parts: list[str] = line.strip().split('|')
 
             # Kontrola, zda byly nalezeny obě části (stav a akce)
             if len(parts) == 2:
                 # Rozdělení a převod první části na float čísla
-                stavy_float = [float(x) for x in parts[0].split()]
+                stavy_float: list = [np.float32(x) for x in parts[0].split()]
 
                 # Rozdělení a převod druhé části na float čísla
-                akce_float = [float(x) for x in parts[1].split()]
+                akce_float: list = [np.float32(x) for x in parts[1].split()]
 
                 # Přidání do seznamu stavy
                 stavy.append(stavy_float)
@@ -619,10 +702,9 @@ if __name__ == '__main__':
         #print("Seznam stavů:", stavy)
         #print("Seznam akcí:", akce)
 
-
         # lines -> stavy a akce
         # hodit to do Belmanna s reward fcí
-        gamma = 0.9
+        # gamma = 0.9
 
         # Výpočet cílových hodnot
         #target_values = calculate_target_q_values(model_tf, gamma, stavy)
@@ -636,24 +718,29 @@ if __name__ == '__main__':
         stavy = np.array(stavy, dtype=np.float32)
         akce = np.array(akce, dtype=np.float32)
         # Vytvořte pole rewards
-        rewards = np.arange(0, len(stavy) * 0.001, 0.001, dtype=np.float32)
+        rewards = np.logspace(start=0.1, stop=np.log10(0.1 + len(stavy) * 0.001), num=len(stavy), dtype=np.float32)
         rewards = rewards[:len(stavy)]
 
         for i, stav in enumerate(stavy):
             #print(stav[:8])
             match int(stav[7]):
                 case 0:
-                    rewards[i] += 0.1
+                    rewards[i] += 10
                 case 1:
-                    rewards[i] -= 0.1
+                    rewards[i] += 0.01
                 case 2:
-                    rewards[i] -= 0.02
+                    rewards[i] += 0.02
                 case 3:
-                    rewards[i] -= 10
+                    pass  # += 0
                 case _:
                     print("nedefinovaný stav v tanku")
                     exit(1)
-            rewards[i] = (stav[0]-100)/10.
+            #rewards[i] += (stav[0])/100.
+            #rewards[i] = rewards[i] ** (1 + my_reward/1000.)
+            if rewards[i] > 1:
+                rewards[i] *= (1+my_reward/100.)
+
+
 
         #print("velikosti:", stavy.shape, akce.shape, rewards.shape)
         #print(rewards)
@@ -665,20 +752,40 @@ if __name__ == '__main__':
         # noinspection PyUnresolvedReferences
         rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
 
-        model_tf.fit(stavy, akce, epochs=1, batch_size=1, sample_weight=rewards, verbose=0, callbacks=[NaNCallback()])
+        if np.any(np.isinf(stavy)) or np.any(np.isnan(stavy)):
+            print("inf or nan stavy:", stavy)
+
+        if np.any(np.isinf(akce)) or np.any(np.isnan(akce)):
+            print("inf or nan akce:", akce)
+
+        if np.any(np.isinf(rewards)) or np.any(np.isnan(rewards)):
+            print("inf or nan rewards:", rewards)
+
+        for jedna_akce in akce:
+            pass  # print("akce pro zkoumání:", jedna_akce)
+
+        """model_tf.fit(stavy, akce, epochs=1, batch_size=1, verbose=0, workers=10,
+                     callbacks=[NaNCallback()])  # , sample_weight=rewards
 
         # Uložení TF a ONNX modelu do souboru
         model_tf.save(models_folder + 'my_model.keras')
         #print("uložení TF modelu")
         onnx_model, _ = tf2onnx.convert.from_keras(model_tf, input_signature)
-        onnx.save_model(onnx_model, onnx_model_path)
+        onnx.save_model(onnx_model, onnx_model_path)"""
 
         #print(f"Model byl převeden do formátu ONNX a uložen v '{onnx_model_path}'.")
         print("Epizoda", episode + 1, "dokončena")
         print("Čas na epizodu: {:.2f}\n".format(time.time() - start_ep_time))
     print("Celkový čas za všechny epizody:", time.time() - start_time)
 
+    """# Získání váh
+    weights = model_tf.get_weights()
 
+    # Vypsání váh
+    for i, layer_weights in enumerate(weights):
+        print(f"Layer {i + 1} weights:")
+        print(layer_weights)
+        print("-------------------------")"""
 
 
 

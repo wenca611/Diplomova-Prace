@@ -29,6 +29,7 @@ import robocode._RobotBase;
 import robocode.BattleResults;
 
 import static java.lang.Math.abs;
+import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +41,11 @@ import java.net.*;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 import java.nio.charset.StandardCharsets;
+import robocode.HitByBulletEvent;
+import robocode.HitRobotEvent;
+import java.util.Stack;
 
-@SuppressWarnings("ALL")
+//@SuppressWarnings("ALL")
 public class PyRobotClient extends AdvancedRobot {
 
 	public static int counter = 1;
@@ -68,51 +72,40 @@ public class PyRobotClient extends AdvancedRobot {
 
 	private static final String FILE_NAME = "ModelGameData.txt";
 
+	private Boolean firstTime = true;
+
 	public Color bodyColor = Color.decode("#003387");//Color.decode("#008733");
 	public Color gunColor = Color.decode("#22EE22");//Color.decode("#FF0000");
 	public Color radarColor = Color.decode("#00FFFF");//Color.decode("#66B0F2");
 
+	private Stack<String> eventStack;
 	public PyRobotClient() {
-		id = counter; //zmena ++ na nic
-
-		this.prop = new Properties();
-		//Logger.logError("*************************************************************");
-		//Logger.logError("      ID: " + id);
-		try {
-			prop.load(new FileInputStream("config/game.properties"));
-			//this.address = prop.getProperty("robot." + id + ".ip");
-			//this.port = Integer.parseInt(prop.getProperty("robot." + id + ".port"));
-			//this.password = prop.getProperty("robot." + id + ".password");
-
-			//this.tcpClientSocket = SocketsHolder.getClientSocketByPort(port);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		//Logger.logError("     CONNECTING TO ADDRESS " + address);
-		//Logger.logError("     CONNECTING TO PORT    " + port);
-		//Logger.logError("     CONNECTING PSWD       " + password);
-		//Logger.logError("*************************************************************");
 	}
 
 	@Override
 	public void run() {
-		// some colors:
-		// 	https://htmlcolorcodes.com/
-		// 	https://www.w3schools.com/colors/default.asp
-		//Color bodyColor = Color.decode("#003387");//Color.decode("#008733");
-		//Color gunColor = Color.decode("#22EE22");//Color.decode("#FF0000");
-		//Color radarColor = Color.decode("#00FFFF");//Color.decode("#66B0F2");
+		//this.eventStack = new Stack<>();
+		Logger.logMessage("Java jede.");
+		//	some colors:
+		//		https://htmlcolorcodes.com/
+		//		https://www.w3schools.com/colors/default.asp
+		// Color bodyColor = Color.decode("#003387");
+		// Color gunColor = Color.decode("#22EE22");
+		// Color radarColor = Color.decode("#00FFFF");
 		setColors(bodyColor, gunColor, radarColor);
 
 		int freePort = findFreePort();
 
 		try {
 			ServerSocket serverSocket = new ServerSocket(freePort);
-			serverSocket.setSoTimeout(3500);
+			if(firstTime){
+				serverSocket.setSoTimeout(2800);
+				firstTime = false;
+			}else
+				serverSocket.setSoTimeout(1200);
 
 			String pythonPath = "src/cz/vutbr/feec/robocode/studentRobot/";
-			String pythonScript = "NeuralTank.py";
+			String pythonScript = "RobotAI.py";
 			String argument = Integer.toString(freePort); // port
 
 			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath+pythonScript, argument);
@@ -120,10 +113,10 @@ public class PyRobotClient extends AdvancedRobot {
 			processBuilder.redirectError(Redirect.DISCARD);
 
 			Process process = processBuilder.start();
-
+			Logger.logMessage("Asi jedu 2");
 			Socket clientSocket = serverSocket.accept();
-
-			serverSocket.setSoTimeout(1000);
+			Logger.logMessage("Asi jedu 3");
+			serverSocket.setSoTimeout(700);
 
 			Logger.logMessage("TCP/IP jede");
 
@@ -315,6 +308,7 @@ public class PyRobotClient extends AdvancedRobot {
 		PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 		out.println(networkStates);
 
+		/*--------------------------------------AKCE z Neuronové sítě-------------------------------------*/
 		// získání akcí z neuronky
 		BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		String receivedActionStr = in.readLine();
@@ -328,18 +322,19 @@ public class PyRobotClient extends AdvancedRobot {
 			// Output from Tank
 			// Tank move 10 <>
 			// Tank turn  30° <>
-			// Shot power  2 <>
 			// Gun turn 45° <>
+			// Shot power  2 <>
 			double simulatedTankMove = parseDoubleWithDefault(actionValues[0], 0.0);
 			double simulatedTankTurn = parseDoubleWithDefault(actionValues[1], 0.0);
-			double simulatedShotPower = parseDoubleWithDefault(actionValues[2], 0.0);
-			double simulatedGunTurn = parseDoubleWithDefault(actionValues[3], 0.0);
+			double simulatedGunTurn = parseDoubleWithDefault(actionValues[2], 0.0);
+			double simulatedShotPower = parseDoubleWithDefault(actionValues[3], 0.0);
+
+			setMaxVelocity(5);
 
 			moveAmount = simulatedTankMove;
 			tankTurn = simulatedTankTurn;
-			firePower = simulatedShotPower;
 			gunTurn = simulatedGunTurn;
-
+			firePower = simulatedShotPower;
 		} else {
 			return;
 		}
@@ -505,5 +500,83 @@ public class PyRobotClient extends AdvancedRobot {
 		} catch (NumberFormatException | NullPointerException e) {
 			return defaultValue;
 		}
+	}
+
+	/**
+	 * onHitByBullet:  Turn perpendicular to the bullet, and move a bit.
+	 */
+	public void onHitByBullet(HitByBulletEvent e) {
+		/*String eventMessage = "onHitByBullet";
+		String FILE_NAME2 = "ClientError.txt";
+
+		File file = new File(FILE_NAME2);
+
+		if (file.exists()) {
+			// Soubor existuje, načti jeho obsah
+			try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					// Zpracování načteného obsahu (pokud je to potřeba)
+					// V tomto příkladu zatím jen vypíšeme obsah
+					System.out.println("Obsah souboru: " + line);
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		} else {
+			// Soubor neexistuje, vytvoř ho
+			try {
+				file.createNewFile();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		// Uložení do souboru na zásobník
+		try (PrintWriter writer = new PrintWriter(new FileWriter(file, true))) {
+			writer.println(eventMessage);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		eventStack.push(eventMessage);*/
+	}
+
+	/**
+	 * onHitRobot:  Aim at it.  Fire Hard!
+	 */
+	public void onHitRobot(HitRobotEvent e) {
+		/*String eventMessage = "HitRobotEvent";
+		String FILE_NAME2 = "ClientError2.txt";
+
+		File file = new File(FILE_NAME2);
+
+		if (file.exists()) {
+			// Soubor existuje, načti jeho obsah
+			try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					// Zpracování načteného obsahu (pokud je to potřeba)
+					// V tomto příkladu zatím jen vypíšeme obsah
+					System.out.println("Obsah souboru: " + line);
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		} else {
+			// Soubor neexistuje, vytvoř ho
+			try {
+				file.createNewFile();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		// Uložení do souboru na zásobník
+		try (PrintWriter writer = new PrintWriter(new FileWriter(file, true))) {
+			writer.println(eventMessage);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		eventStack.push(eventMessage);*/
 	}
 }

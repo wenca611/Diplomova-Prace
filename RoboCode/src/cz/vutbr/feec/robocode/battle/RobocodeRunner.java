@@ -22,6 +22,8 @@ import robocode.control.RobotSpecification;
 public class RobocodeRunner {
 
 	public static void main(String[] args) throws IOException {
+		long start = System.currentTimeMillis();
+
 		System.setProperty("NOSECURITY", "true");
 		System.out.println("SECURITY OFF: " + RobocodeProperties.isSecurityOff());
 		//System.out.println("NOSECURITY "+System.getProperty("NOSECURITY", "false").equals("true"));
@@ -67,6 +69,15 @@ public class RobocodeRunner {
 		}
 
 		runRobocode(numOfPlayers, listOfEnemies, numberOfRounds, gameWidth, gameHeight, isVisible);
+
+		// Výpočet trvání v milisekundách
+		long duration = System.currentTimeMillis() - start;
+
+		// Výpis trvání
+		System.out.println("Čas běhu kódu: " + (int) (duration/1000) + " s");
+
+		// Make sure that the Java VM is shut down properly
+		System.exit(0);
 	}
 
 	public static void runRobocode(int numOfPlayers, String listOfEnemies, int numberOfRounds, int gameWidth,
@@ -131,8 +142,5 @@ public class RobocodeRunner {
 
 		// Cleanup our RobocodeEngine
 		engine.close();
-
-		// Make sure that the Java VM is shut down properly
-		System.exit(0);
 	}
 }
