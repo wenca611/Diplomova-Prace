@@ -1,5 +1,5 @@
-# Semestrální práce
-Semestrální práce
+# Diplomová práce
+Diplomová práce
 
 2023/24
 Bc. Václav Pastušek
