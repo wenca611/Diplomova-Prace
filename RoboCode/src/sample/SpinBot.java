@@ -164,7 +164,7 @@ public class SpinBot extends AdvancedRobot {
 			//<----
 			actions = new double[]{10000., 10000., 0., 0.};
 			createActionsString();
-			saveToFile(FILE_NAME, states + "|" + actionsString);
+//			saveToFile(FILE_NAME, states + "|" + actionsString);
 
 
 		}
@@ -178,7 +178,7 @@ public class SpinBot extends AdvancedRobot {
 		//<----
 		actions = new double[]{0., 0., 0., 3.};
 		createActionsString();
-		saveToFile(FILE_NAME, states + "|" + actionsString);
+//		saveToFile(FILE_NAME, states + "|" + actionsString);
 	}
 
 	/**
@@ -191,14 +191,14 @@ public class SpinBot extends AdvancedRobot {
 			//<----
 			actions = new double[]{0., 0., 0., 3.};
 			createActionsString();
-			saveToFile(FILE_NAME, states + "|" + actionsString);
+//			saveToFile(FILE_NAME, states + "|" + actionsString);
 		}
 		if (e.isMyFault()) {
 			turnRight(10);
 			//<----
 			actions = new double[]{0., 10., 0., 0.};
 			createActionsString();
-			saveToFile(FILE_NAME, states + "|" + actionsString);
+//			saveToFile(FILE_NAME, states + "|" + actionsString);
 		}
 	}
 

@@ -72,8 +72,6 @@ public class PyRobotClient extends AdvancedRobot {
 
 	private static final String FILE_NAME = "ModelGameData.txt";
 
-	private Boolean firstTime = true;
-
 	public Color bodyColor = Color.decode("#003387");//Color.decode("#008733");
 	public Color gunColor = Color.decode("#22EE22");//Color.decode("#FF0000");
 	public Color radarColor = Color.decode("#00FFFF");//Color.decode("#66B0F2");
@@ -94,43 +92,33 @@ public class PyRobotClient extends AdvancedRobot {
 		// Color radarColor = Color.decode("#00FFFF");
 		setColors(bodyColor, gunColor, radarColor);
 
-		int freePort = findFreePort();
+		Properties prop = new Properties();
+		try {
+			prop.load(new FileInputStream("config/game.properties"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		int trainingPort = Integer.parseInt(prop.getProperty("trainingPort", "0"));
+
+//		try {
+//			Thread.sleep(1000); // Uspí vlákno na 1 sekundu (1000 milisekund)
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 
 		try {
-			ServerSocket serverSocket = new ServerSocket(freePort);
-			if(firstTime){
-				serverSocket.setSoTimeout(2800);
-				firstTime = false;
-			}else
-				serverSocket.setSoTimeout(1200);
+			Logger.logMessage("Pokus o pripojeni na port: "+trainingPort);
+			Socket clientSocket = new Socket("localhost", trainingPort);
+			clientSocket.setSoTimeout(200); // Nastavení časového limitu pro příjem dat na 10 sekund
+			Logger.logMessage("TCP/IP je aktivní");
 
-			String pythonPath = "src/cz/vutbr/feec/robocode/studentRobot/";
-			String pythonScript = "RobotAI.py";
-			String argument = Integer.toString(freePort); // port
-
-			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath+pythonScript, argument);
-			processBuilder.redirectOutput(Redirect.DISCARD);
-			processBuilder.redirectError(Redirect.DISCARD);
-
-			Process process = processBuilder.start();
-			Logger.logMessage("Asi jedu 2");
-			Socket clientSocket = serverSocket.accept();
-			Logger.logMessage("Asi jedu 3");
-			serverSocket.setSoTimeout(700);
-
-			Logger.logMessage("TCP/IP jede");
 
 			// Kontrola existence souboru
 			File file = new File(FILE_NAME);
 
-			if (file.exists()) {
-				// Soubor existuje, vymaž jeho obsah
-				clearFileContent(file);
-			} else {
-				// Soubor neexistuje, vytvoř ho
-				createFile(file);
-			}
 
+			//saveToFile(file, "round");
 			// Loop forever
 			//noinspection InfiniteLoopStatement
 			while (true) {
@@ -212,7 +200,7 @@ public class PyRobotClient extends AdvancedRobot {
 		//this.x = robot.getX();
 		//this.y = robot.getY();
 		//this.state = robot.getState().getValue(); INT
-		///** The robot is active on the battlefield and has not hit the wall or a robot at this turn. */
+		/* The robot is active on the battlefield and has not hit the wall or a robot at this turn. */
 		//ACTIVE(0),
 		//
 		///** The robot has hit a wall, i.e. one of the four borders, at this turn. This state only last one turn. */
@@ -292,7 +280,7 @@ public class PyRobotClient extends AdvancedRobot {
 
 		networkStates = networkStates.replaceAll("[\\[\\]]", "").replaceAll(",", " ");
 
-		if (networkStates.length() > 0) {
+		if (!networkStates.isEmpty()) {
 			networkStates = networkStates.substring(0, networkStates.length() - 1);
 		}
 
@@ -312,22 +300,93 @@ public class PyRobotClient extends AdvancedRobot {
 		// získání akcí z neuronky
 		BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		String receivedActionStr = in.readLine();
-
+        //Logger.logMessage("akce: " + receivedActionStr);
 		// Oddělení hodnot pomocí mezer
-		String actionValuesStr = receivedActionStr.replaceAll("\\s+", " ");
-		String[] actionValues = actionValuesStr.split("\\s+");
+		String actionValuesStr = receivedActionStr.replaceAll("\\s+", "");
+		String[] actionValues = actionValuesStr.split(",");
+
+		/*Logger.logMessage("delka akcí: " + actionValues.length);
+		Logger.logMessage("Akce: " + receivedActionStr);
+		Logger.logMessage("Akce2: " + String.join(" ", actionValues));*/
+
+		// Získání indexu největšího čísla
+		int indexOfMaxAction = getIndexOfMaxValue(actionValues);
+
+
 
 		// Kontrola, zda bylo získáno správné množství hodnot
-		if (actionValues.length == 4) {
+		if (actionValues.length == 44) {
 			// Output from Tank
 			// Tank move 10 <>
 			// Tank turn  30° <>
 			// Gun turn 45° <>
 			// Shot power  2 <>
-			double simulatedTankMove = parseDoubleWithDefault(actionValues[0], 0.0);
+
+
+			List<List<Integer>> actions2D = new ArrayList<>();
+
+			// První část
+			for (int i = 0; i < 5; i++) {
+				for (int j = 0; j < 5; j++) {
+					List<Integer> sublist = new ArrayList<>();
+					sublist.add(i);
+					sublist.add(j);
+					sublist.add(0);
+					sublist.add(2);
+					actions2D.add(sublist);
+				}
+			}
+
+			// Druhá část
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 5; j++) {
+					if (!(i == 0 && j == 2)) {  // Přidat pouze pokud není (0, 2)
+						List<Integer> sublist = new ArrayList<>();
+						sublist.add(2);
+						sublist.add(2);
+						sublist.add(i);
+						sublist.add(j);
+						actions2D.add(sublist);
+					}
+				}
+			}
+
+			// Výpis výsledného pole polí čtveřic
+			/*for (List<Integer> sublist : actions2D) {
+				System.out.println(sublist+"\n");
+			}*/
+			
+
+			List<Float> action1 = Arrays.asList(-10.0f, -5.0f, 0.0f, 5.0f, 10.0f);
+			List<Float> action2 = Arrays.asList(-10.0f, -5.0f, 0.0f, 5.0f, 10.0f);
+			List<Float> action3 = Arrays.asList(0.0f, 1.0f, 2.0f, 3.0f);
+			List<Float> action4 = Arrays.asList(-5.0f, -1.0f, 0.0f, 1.0f, 5.0f);
+			//Logger.logMessage(""+action1+" "+action2+" "+action3+" "+action4);
+
+
+			//Logger.logMessage(""+actions2D);
+			//Logger.logMessage(""+actions2D.size());
+			//Logger.logMessage(""+actions2D.get(0).size());
+			//Logger.logMessage("Index největšího čísla: " + indexOfMaxAction);
+			//Logger.logMessage("Akce1: "+action1.get(actions2D.get(indexOfMaxAction).get(0)));
+			//Logger.logMessage("Akce2: "+action2.get(actions2D.get(indexOfMaxAction).get(1)));
+			//Logger.logMessage("Akce3: "+action3.get(actions2D.get(indexOfMaxAction).get(2)));
+			//Logger.logMessage("Akce4: "+action4.get(actions2D.get(indexOfMaxAction).get(3)));
+
+
+			/*double simulatedTankMove = parseDoubleWithDefault(actionValues[0], 0.0);
 			double simulatedTankTurn = parseDoubleWithDefault(actionValues[1], 0.0);
 			double simulatedGunTurn = parseDoubleWithDefault(actionValues[2], 0.0);
-			double simulatedShotPower = parseDoubleWithDefault(actionValues[3], 0.0);
+			double simulatedShotPower = parseDoubleWithDefault(actionValues[3], 0.0);*/
+
+
+			double simulatedTankMove = (double) action1.get(actions2D.get(indexOfMaxAction).get(0));
+			double simulatedTankTurn = (double) action1.get(actions2D.get(indexOfMaxAction).get(1));
+			double simulatedGunTurn = (double) action1.get(actions2D.get(indexOfMaxAction).get(2));
+			double simulatedShotPower = (double) action1.get(actions2D.get(indexOfMaxAction).get(3));
+
+//			Logger.logMessage("log akce:" + simulatedTankMove + " " + simulatedTankTurn + " " +
+//					simulatedGunTurn + " " + simulatedShotPower);
 
 			setMaxVelocity(5);
 
@@ -340,7 +399,7 @@ public class PyRobotClient extends AdvancedRobot {
 		}
 
 		// Spojení stavu a akce
-		String combinedData = networkStates + "|" + actionValuesStr;
+		String combinedData = networkStates + "|" + indexOfMaxAction;
 
 		// Uložení do souboru
 		saveToFile(file, combinedData);
@@ -462,7 +521,7 @@ public class PyRobotClient extends AdvancedRobot {
 		try (PrintWriter writer = new PrintWriter(file)) {
 			// Vymaž obsah souboru
 			writer.print("");
-			System.out.println("Obsah souboru byl vymazán.");
+			//System.out.println("Obsah souboru byl vymazán.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -486,11 +545,21 @@ public class PyRobotClient extends AdvancedRobot {
 			 BufferedWriter bufferedWriter = new BufferedWriter(writer);
 			 PrintWriter printWriter = new PrintWriter(bufferedWriter)) {
 			// Uložení dat na poslední řádek
-			printWriter.println(data);
-			System.out.println("Data byla uložena do souboru.");
+			printWriter.println(data+"");
+			//System.out.println("Data byla uložena do souboru.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		/*try {
+			FileWriter writer = new FileWriter(file, true); // Otevření souboru pro přidání na konec
+			writer.write(data+""); // Zápis nových dat
+			writer.close(); // Uzavření souboru
+		} catch (IOException e) {
+			System.out.println("Nastala chyba při zápisu do souboru: " + e.getMessage());
+		}*/
+
+
 	}
 
 	// Metoda pro převod na Double s výchozí hodnotou pro případ NaN
@@ -500,6 +569,21 @@ public class PyRobotClient extends AdvancedRobot {
 		} catch (NumberFormatException | NullPointerException e) {
 			return defaultValue;
 		}
+	}
+
+	public static int getIndexOfMaxValue(String[] actionValues) {
+		int indexOfMaxValue = 0;
+		float maxValue = Float.MIN_VALUE;
+
+		for (int i = 0; i < actionValues.length; i++) {
+			float value = Float.parseFloat(actionValues[i]);
+			if (value > maxValue) {
+				maxValue = value;
+				indexOfMaxValue = i;
+			}
+		}
+
+		return indexOfMaxValue;
 	}
 
 	/**
