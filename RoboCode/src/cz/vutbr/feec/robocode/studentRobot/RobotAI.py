@@ -8,7 +8,7 @@ import logging  # 19 ms
 
 # Current directory: RoboCodeProject\RoboCode\src\cz\vutbr\feec\robocode\studentRobot
 
-# Získání aktuální pracovní složky
+# Get the current working directory
 current_working_directory = os.path.abspath(os.path.dirname(__file__))
 # logging.basicConfig(filename='error.log', level=logging.DEBUG)
 logging.basicConfig(filename='error.log', level=logging.ERROR)
@@ -16,28 +16,44 @@ logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 class Timer:
     """
-
+    Context manager class for measuring the execution time of a code block.
     """
+
     def __enter__(self):
+        """
+        Enter the runtime context related to this object.
+        :return: self
+        """
         self.start_time = time.time()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        end_time = time.time()
-        elapsed_time = end_time - self.start_time
+        """
+        Exit the runtime context related to this object.
+
+        :param exc_type: Exception type, if an exception was raised
+        :param exc_value: Exception value, if an exception was raised
+        :param traceback: Traceback object, if an exception was raised
+        :return: None
+        """
+        end_time: float = time.time()
+        elapsed_time: float = end_time - self.start_time
         if exc_type is not None:
             logging.error("Výjimka: {}".format(exc_value))
         logging.error("Cas vykonani kodu: {:.6f} sekund".format(elapsed_time))
 
 
-def main(port, epsilon, nnName):
+def main(port: int, epsilon: float, nnName: str) -> None:
     """
+    Main function to connect to the server, load TensorFlow and NumPy, and establish a secondary connection.
 
-    :param port:
-    :return:
+    :param port: Port number to connect to the server.
+    :param epsilon: Epsilon value for the neural network.
+    :param nnName: Name of the neural network.
+    :return: None
     """
     # logging.error("main, port: {0}, epsilon: {1}, nnName: {2}".format(port, epsilon, nnName))
-    # Připojit se k serverovému portu
+    # Connect to the server port
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect(("localhost", port))
@@ -45,33 +61,33 @@ def main(port, epsilon, nnName):
     except Exception as e:
         return
 
-    # Oznámit, že se pokoušíme načíst TensorFlow and NumPy
+    # Inform that we are attempting to load TensorFlow and NumPy
     client_socket.send("Attempting to load TensorFlow and NumPy...\n".encode())
 
-    # Načíst TensorFlow and NumPy
+    # Load TensorFlow and NumPy
     try:
         sys.path.append(os.path.abspath(os.path.join(
             current_working_directory, '..', '..', '..', '..', '..', '..', '..', 'venv', 'Lib', 'site-packages')))
-        # logging.error("před tf")
+        # logging.error("before tf")
         import tensorflow as tf  # avg = 3.4 s, max = 8.3 s
-        # logging.error("po tf")
+        # logging.error("after tf")
         tf.compat.v1.disable_eager_execution()
         import numpy as np  # avg = 90 ms, max = 150 ms
         client_socket.send("TensorFlow and NumPy loaded successfully.\n".encode())
 
-        # Čekání na zprávu "ACK"
+        # Wait for the "ACK" message
         ack_received = False
         while not ack_received:
             ack_message = client_socket.recv(1024).decode()
             if ack_message.strip() == "ACK":
                 ack_received = True
 
-        # Po obdržení "ACK" ukončit stávající komunikaci
+        # Close the existing communication after receiving "ACK"
         client_socket.close()
 
-        # logging.error("konec prvni komunikace")
+        # logging.error("end of first communication")
 
-        # Vytvořit druhé spojení a naslouchat na novou komunikaci
+        # Establish a second connection and listen for new communication
         establish_second_connection(port, epsilon, nnName, tf, np)
 
     except Exception as e:
@@ -81,23 +97,33 @@ def main(port, epsilon, nnName):
         return
 
 
-def establish_second_connection(port, epsilon, nnName, tf, np):
+def establish_second_connection(port: int, epsilon: float, nnName: str, tf, np):
+    """
+    Establish a second connection to load the neural network model and listen for new communication.
+
+    :param port: Port number to connect to the server.
+    :param epsilon: Epsilon value for the neural network.
+    :param nnName: Name of the neural network.
+    :param tf: TensorFlow module.
+    :param np: NumPy module.
+    :return: None
+    """
     neural_network_models_folder = os.path.abspath(
         os.path.join(current_working_directory, '..', '..', '..', '..', '..', '..', 'NNModels'))
 
-    keras_model_path = neural_network_models_folder + '/' + nnName
+    keras_model_path: str = neural_network_models_folder + '/' + nnName
 
-    # Kontrola existence cesty
+    # Check if the model path exists
     if not os.path.exists(keras_model_path):
         error_message = f"Cesta '{keras_model_path}' neexistuje. Program bude ukončen."
         # logging.error(error_message)
         current_path = os.path.abspath(os.path.dirname(__file__))
-        # logging.error(f"Aktuální pracovní složka: {current_path}")
+        # logging.error(f"Current working directory: {current_path}")
         sys.exit(1)
 
-    # logging.error("i am here1")
+    # logging.error("I am here1")
 
-    # Připojení se na stejný port a naslouchání na novou komunikaci
+    # Connect to the same port and listen for new communication
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 0 ms
     server_socket.settimeout(30)  # 0 ms
     server_socket.bind(("localhost", port))  # 0 ms
@@ -106,64 +132,65 @@ def establish_second_connection(port, epsilon, nnName, tf, np):
     model = tf.keras.models.load_model(keras_model_path, compile=False)  # 125 ms (with compile 160 ms)
     # time.sleep(2.5)
 
-    # Přijímání připojení od klienta
+    # Accept connection from the client
     client_socket, address = server_socket.accept()  # 3.5 - 5 s
     client_socket.settimeout(0.5)  # 0 ms
-    # logging.error("i am here 2")
+    # logging.error("I am here 2")
 
     while True:  # 50 ms
         try:
-            # ------------------------získané STAVY do Neuronové sítě------------------------------------#
-            received_data = client_socket.recv(20000)  # Pokusíme se přijmout data ze socketu, 160n asi 1000+B
+            # ------------------------STATES for NN------------------------------------#
+            # Attempt to receive data from the socket
+            received_data = client_socket.recv(20000)  # Trying to receive data from the socket, 160 ~ 1000+B
             # logging.error(received_data.decode('utf-8').strip())
             if len(received_data) == 0:
                 server_socket.close()
                 client_socket.close()
                 break
         except socket.timeout:
-            # Uplynulo 5 sekund a data nebyla obdržena
+            # 0.5 seconds have passed and no data has been received
             # logging.error("socket.timeout")
             server_socket.close()
             client_socket.close()
             break
         except ConnectionRefusedError:
-            # Server odmítl spojení
+            # The server refused the connection
             logging.error("ConnectionRefusedError")
             break
         except OSError as e:
-            # Další možné chyby spojené se soketem
+            # Other possible socket-related errors
             logging.error("OSError: " + str(e))
             break
 
-        # Dekódování bajtů na řetězec a odstranění \r\n na konci 1 ms
+        # Decoding bytes to a string and stripping \r\n at the end, 1 ms
         decoded_data = received_data.decode('utf-8').strip()
 
-        # Rozdělení řetězce podle mezery a převedení na pole floatů
+        # Splitting the string by spaces and converting to a float array
         float_array = np.array([[float(num) for num in decoded_data.split()]], dtype=np.float32)
 
         output_data = None
 
-        # logging.error("Informace o architekture modelu:")
-        # logging.error(f"Pocet vrstev: {len(model.layers)}")
-        # logging.error(f"Vstupni tvar: {model.input_shape}")
-        # logging.error(f"Vystupni tvar: {model.output_shape}")
+        # logging.error("Model architecture information:")
+        # logging.error(f"Number of layers: {len(model.layers)}")
+        # logging.error(f"Input shape: {model.input_shape}")
+        # logging.error(f"Output shape: {model.output_shape}")
         # logging.error(f"float_array: {float_array}")
 
         # with Timer():
         try:  # 1 ms
             output_data = model.predict(float_array)
         except Exception as e:
-            # Logování chyby
+            # Logging the error
             logging.error("Chyba pri spusteni modelu: %s", str(e))
 
         formatted_data = np.squeeze(output_data)
         # logging.error(f"formatted_data: {formatted_data}")
 
         # OUT DATA:
-        # pohyb tanku INT
-        # otočení tanku INT
-        # síla střely INT
-        # pohyb dělem INT
+        # tank movement INT
+        # tank rotation INT
+        # firepower INT
+        # gun movement INT
 
         if np.random.rand() < epsilon:
             formatted_data = np.random.uniform(-10, 10, 44)
@@ -172,21 +199,21 @@ def establish_second_connection(port, epsilon, nnName, tf, np):
         formatted_data = formatted_data.strip("[]").replace("\n", "").replace(" ", "")
         # logging.error("akce:" + formatted_data + "\n")
 
-        # ------------------------AKCE z Neuronové sítě------------------------------------#
+        # ------------------------ACTION from NN------------------------------------#
         if len(output_data):
             client_socket.send((formatted_data + "\n").encode())
 
         # logging.error("data poslana do Javy")
 
-    # Uzavřeme socket
+    # Close the socket
     client_socket.close()
     server_socket.close()
 
 
 if __name__ == "__main__":
-    port = int(sys.argv[1])  # Port předaný jako argument při spuštění skriptu
-    epsilon = float(sys.argv[2])
-    nnName = sys.argv[3]
+    port: int = int(sys.argv[1])  # Port passed as an argument when running the script
+    epsilon: float = float(sys.argv[2])  # Epsilon value passed as an argument
+    nnName: str = sys.argv[3]  # Neural network name passed as an argument
     main(port, epsilon, nnName)
 
 
