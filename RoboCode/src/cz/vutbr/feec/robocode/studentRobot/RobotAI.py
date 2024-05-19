@@ -97,7 +97,7 @@ def main(port: int, epsilon: float, nnName: str) -> None:
         return
 
 
-def establish_second_connection(port: int, epsilon: float, nnName: str, tf, np):
+def establish_second_connection(port: int, epsilon: float, nnName: str, tf, np) -> None:
     """
     Establish a second connection to load the neural network model and listen for new communication.
 
